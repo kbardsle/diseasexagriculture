@@ -1,3 +1,6 @@
+# Defining spatially and temporally explicit disease model using Odin
+# Group rotation project - Spring 2024
+
 # load libraries
 library(odin)
 library(tidyverse)
@@ -5,29 +8,55 @@ library(tidyverse)
 # build spatial model
 sir <- odin::odin({
 
-  deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]-0.01) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
+  # SUSCEPTIBLE:
+      # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
+          # decrease the proportion of susceptible by a set seed (here 0.01) to seed the infection
+      # if a location was infected in an earlier time step, calculate deriv(S) as normal
+      # if a location is still not infected, set deriv(S) to 0 (don't change)
+      deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*(S[i]-0.01)*I[i] else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
+      
+  # INFECTED:
+      # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
+          # increase the proportion of infected by a set seed (here 0.01) to seed the infection
+      # if a location was infected in an earlier time step, calculate deriv(I) as normal
+      # if a location is still not infected, set deriv(I) to 0 (don't change)
   deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+0.01) - gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
+  
+  # RECOVERED:
+      # calculations unchanged because conceptually, nobody would have recovered yet during the first timestep of infection
   deriv(R[]) <- if (infected[i] > 0) gamma*I[i] else 0
+  
+  # DEBUGGING:
   deriv(x[]) <- infected[i]
   
-  # define terms
+  # DEFINE TERMS:
+  
   k_dij[,] <- exp(-dij[i,j]/ro)  # exponential kernel
-  NK_num[,] <- (N[j] * if (I[j] > 0) 1 else 0)^nu * k_dij[i,j]  # matrix of the values for the equation numerator for all combinations of i and j (will be further filtered before summing)
-  #NK_num[,] <- (N[j] * infected[j])^nu * k_dij[i,j]
-  NK_denom[,] <- N[j]^nu * k_dij[i,j]  # matrix of the values for the equation denominator for all combinations of i and j 
+  
+  # matrix of the values for the equation numerator for all combinations of i and j:
+  NK_num[,] <- (N[j] * if (I[j] > 0) 1 else 0)^nu * k_dij[i,j]
+      # value is 0 if location not infected, in order for this value to not be included in the sum
+      # because only summing up values for infected locations
+  # matrix of the values for the equation denominator for all combinations of i and j:
+  NK_denom[,] <- N[j]^nu * k_dij[i,j]  
   # both the numerator and denominator matrices will be further filtered before summations are taken (see below)
   
-  lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0 
-  # lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu else 99999
-  # lambda[] <- 999999  # added to debug
+  # calculate lambda (the force of infection) (should be between 0 and infinity):
+      # for the numerator, a value is included in the sum if it is row i (and not the location is infected)
+      # for the denominator, a value is included in the sum if it is in row i, 
+      # as long as it isn't on the diagonal (i.e., i != j)
+  lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
   
-  
+  # use lambda to calculate the probability of infection starting in a location:
   infection_prob[] <- (1-exp(-lambda[i]))
-  infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0
-  # infected[] <- if (infection_prob[i] > infection_threshold) 1 else if (I[i] > 0) 2 else 0
-  # previously_infected[] <- if(I[i] > 0) 1 else 0  # 1 if previously infected
   
-  # print statements to help with debugging
+  # create a vector tracking whether a location has been infected
+      # 1 for infected, 0 if not infected yet
+      # will be marked infected if the infection probability is above a user-specified threshold
+  infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0
+
+  # PRINT STATEMENTS TO HELP WITH DEBUGGING:
+  
   # print("infected: {infected[1]}, {infected[2]}, {infected[3]}, {infected[4]}") #, when = infected[1] == 0)
   # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
   # print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
@@ -39,7 +68,8 @@ sir <- odin::odin({
 
   
   
-  # define user input values
+  # DEFINE USER INPUTS
+  
   N[] <- user()  # vector of population sizes for locations
   dij[,] <- user()  # matrix of values for distances between i and j locations
   init_S[] <- user()  # vector of starting susceptible population proportions for each location
@@ -60,14 +90,14 @@ sir <- odin::odin({
   beta <- user()
   gamma <- user()
   
-  # define initial state
+  # DEFINE INITIAL STATE
   initial(S[]) <- init_S[i]
   initial(I[]) <- init_I[i]
   initial(R[]) <- init_R[i]
   
   initial(x[]) <- 0  # added to help with debugging
   
-  # assign dimensions to variables
+  # ASSIGN DIMENSIONS
   dim(N) <- n_locations
   dim(k_dij) <- c(n_locations, n_locations)
   dim(infected) <- n_locations
@@ -88,7 +118,8 @@ sir <- odin::odin({
 }, debug_enable=TRUE)
 
 
-# test our model
+# TEST OUR MODEL
+
 # build test data
 populations <- c(100, 100, 100, 100)
 distances_vec <- c(0, 5, 10, 8,
@@ -96,6 +127,7 @@ distances_vec <- c(0, 5, 10, 8,
                    10, 20, 0, 15,
                    8, 7, 15, 0)*1000
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
+
 # define parameters
 beta_not <- 0.0004
 beta_d <- 0.77
