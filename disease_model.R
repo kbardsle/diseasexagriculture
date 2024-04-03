@@ -16,12 +16,16 @@ sir <- odin::odin({
 
   # SUSCEPTIBLE:
   deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
-      
+  # deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(1/N[i]) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
+  
   # INFECTED:
   deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+0.01) - gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
+  # deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(1/N[i]) - gamma*(1/N[i]) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
+  
   
   # RECOVERED:
-  deriv(R[]) <- if (infected[i] > 0) gamma*(I[i]+0.01) else 0
+  deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0
+  # deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(1/N[i]) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
   
   # DEBUGGING:
   deriv(x[]) <- infected[i]
@@ -56,12 +60,9 @@ sir <- odin::odin({
   
   # print("infected: {infected[1]}, {infected[2]}, {infected[3]}, {infected[4]}") #, when = infected[1] == 0)
   # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
-  # print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
-  print("NK_denom: {NK_denom[1]}, {NK_denom[2]}, {NK_denom[3]}, {NK_denom[4]}")
+  print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
+  # print("NK_denom: {NK_denom[1]}, {NK_denom[2]}, {NK_denom[3]}, {NK_denom[4]}")
   print("(sum(NK_denom[1,]) - NK_denom[1,1])^epsilon: sum({NK_denom[1,]}) - {NK_denom[1,1]})^{epsilon}")
-  # print("infected_2: {infected[2]}", when = infected[2] == 0)
-  # print("infected_3: {infected[3]}", when = infected[3] == 0)
-  # print("infected_4: {infected[4]}", when = infected[4] == 0)
 
   
   
