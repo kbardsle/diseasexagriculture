@@ -8,23 +8,20 @@ library(tidyverse)
 # build spatial model
 sir <- odin::odin({
 
+  # Logic for SIR Calculations:
+    # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
+        # increase the proportion of infected by a set seed (here 0.01) to seed the infection
+    # if a location was infected in an earlier time step, calculate derivatives as normal
+    # if a location is still not infected, set derivatives to 0 (don't change)
+
   # SUSCEPTIBLE:
-      # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
-          # decrease the proportion of susceptible by a set seed (here 0.01) to seed the infection
-      # if a location was infected in an earlier time step, calculate deriv(S) as normal
-      # if a location is still not infected, set deriv(S) to 0 (don't change)
-      deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*(S[i]-0.01)*I[i] else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
+  deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
       
   # INFECTED:
-      # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
-          # increase the proportion of infected by a set seed (here 0.01) to seed the infection
-      # if a location was infected in an earlier time step, calculate deriv(I) as normal
-      # if a location is still not infected, set deriv(I) to 0 (don't change)
   deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+0.01) - gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
   
   # RECOVERED:
-      # calculations unchanged because conceptually, nobody would have recovered yet during the first timestep of infection
-  deriv(R[]) <- if (infected[i] > 0) gamma*I[i] else 0
+  deriv(R[]) <- if (infected[i] > 0) gamma*(I[i]+0.01) else 0
   
   # DEBUGGING:
   deriv(x[]) <- infected[i]
