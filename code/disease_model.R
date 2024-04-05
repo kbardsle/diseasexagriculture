@@ -15,18 +15,14 @@ sir <- odin::odin({
     # if a location is still not infected, set derivatives to 0 (don't change)
 
   # SUSCEPTIBLE:
-  deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
-  # deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(1/N[i]) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
-  
+  deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
+
   # INFECTED:
-  deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+0.01) - gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
-  # deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(1/N[i]) - gamma*(1/N[i]) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
-  
+  deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+seed) - gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
   
   # RECOVERED:
-  deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(I[i]+0.01) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0
-  # deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(1/N[i]) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0  # here edited the seed so 1 over the population size (the proportion equal to 1 infected individual)
-  
+  deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0
+
   # DEBUGGING:
   deriv(x[]) <- infected[i]
   
@@ -94,6 +90,7 @@ sir <- odin::odin({
   ro <- user()
   beta <- user()
   gamma <- user()
+  seed <- user()
   
   # DEFINE INITIAL STATE
   initial(S[]) <- init_S[i]
@@ -144,10 +141,11 @@ mu <- 0.23
 nu <- 0
 epsilon <- 0.5  # was 1, edited to be 0.5 for testing
 n_locations <- 4
-infection_threshold <- 0.5   # changed this from 0.001
+infection_threshold <- 0.8   # not sure what this should be - ask Stephen for his thoughts
 ro <- 96
 beta <- 4
 gamma <- 0  # this was 3.5, changed to 0 so nobody would recover to help with debugging
+seed <- 0.05  # proportion infected to add at first infection step
 
 # user inputs
 init_S <- c(1, 1, .99, 1)
