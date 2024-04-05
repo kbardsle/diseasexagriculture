@@ -39,14 +39,17 @@ sir <- odin::odin({
       # value is 0 if location not infected, in order for this value to not be included in the sum
       # because only summing up values for infected locations
   # matrix of the values for the equation denominator for all combinations of i and j:
-  NK_denom[,] <- N[j]^nu * k_dij[i,j]  
+  NK_denom[,] <- N[j]^nu * k_dij[i,j]  # for testing, nu=0, so this should just be the distance kernel
   # both the numerator and denominator matrices will be further filtered before summations are taken (see below)
   
   # calculate lambda (the force of infection) (should be between 0 and infinity):
       # for the numerator, a value is included in the sum if it is row i (and not the location is infected)
       # for the denominator, a value is included in the sum if it is in row i, 
       # as long as it isn't on the diagonal (i.e., i != j)
-  lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
+  NK_denom_sum[] <- sum(NK_denom[i,])
+  denom[] <- (sum(NK_denom[i,]) - NK_denom[i,i])^epsilon
+  lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i]) else 0
+  # lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
   
   # use lambda to calculate the probability of infection starting in a location:
   infection_prob[] <- (1-exp(-lambda[i]))
@@ -62,7 +65,9 @@ sir <- odin::odin({
   # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
   print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
   # print("NK_denom: {NK_denom[1]}, {NK_denom[2]}, {NK_denom[3]}, {NK_denom[4]}")
-  print("(sum(NK_denom[1,]) - NK_denom[1,1])^epsilon: sum({NK_denom[1,]}) - {NK_denom[1,1]})^{epsilon}")
+  # print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
+  print("NK_denom_sum: {NK_denom_sum[1]}, {NK_denom_sum[2]}, {NK_denom_sum[3]}, {NK_denom_sum[4]}")
+  
 
   
   
@@ -105,6 +110,8 @@ sir <- odin::odin({
   dim(R) <- n_locations
   dim(NK_num) <- c(n_locations, n_locations)
   dim(NK_denom) <- c(n_locations, n_locations)
+  dim(NK_denom_sum) <- n_locations  # added for debugging
+  dim(denom) <- n_locations  # added for debugging
   dim(lambda) <- n_locations
   dim(infection_prob) <- n_locations
   dim(init_S) <- n_locations
@@ -123,7 +130,7 @@ populations <- c(100, 100, 100, 100)
 distances_vec <- c(0, 5, 10, 8,
                    5, 0, 20, 7,
                    10, 20, 0, 15,
-                   8, 7, 15, 0)*1000
+                   8, 7, 15, 0)*1
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
 
 # define parameters
