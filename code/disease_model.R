@@ -46,7 +46,7 @@ sir <- odin::odin({
       # for the numerator, a value is included in the sum if it is row i (and not the location is infected)
       # for the denominator, a value is included in the sum if it is in row i, 
       # as long as it isn't on the diagonal (i.e., i != j)
-  NK_denom_sum[] <- sum(NK_denom[i,])
+  NK_denom_sum[] <- sum(NK_denom[i,])  # added for debugging
   denom[] <- (sum(NK_denom[i,]) - NK_denom[i,i])^epsilon
   lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i]) else 0
   # lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
@@ -62,11 +62,13 @@ sir <- odin::odin({
   # PRINT STATEMENTS TO HELP WITH DEBUGGING:
   
   # print("infected: {infected[1]}, {infected[2]}, {infected[3]}, {infected[4]}") #, when = infected[1] == 0)
-  # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
+  print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
   print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
-  # print("NK_denom: {NK_denom[1]}, {NK_denom[2]}, {NK_denom[3]}, {NK_denom[4]}")
-  # print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
+  # print("dij: {dij[1,1]}, {dij[1,2]}, {dij[1,3]}, {dij[1,4]}")
+  # print("k_dij: {k_dij[1,1]}, {k_dij[1,2]}, {k_dij[1,3]}, {k_dij[1,4]}")
+  # print("NK_denom: {NK_denom[1,1]}, {NK_denom[1,2]}, {NK_denom[1,3]}, {NK_denom[1,4]}")
   print("NK_denom_sum: {NK_denom_sum[1]}, {NK_denom_sum[2]}, {NK_denom_sum[3]}, {NK_denom_sum[4]}")
+  print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
   
 
   
@@ -127,10 +129,10 @@ sir <- odin::odin({
 
 # build test data
 populations <- c(100, 100, 100, 100)
-distances_vec <- c(0, 5, 10, 8,
-                   5, 0, 20, 7,
-                   10, 20, 0, 15,
-                   8, 7, 15, 0)*1
+distances_vec <- c(0, 5, 10, 80,
+                   5, 0, 200, 7,
+                   10, 200, 0, 1500,
+                   80, 7, 1500, 0)*1
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
 
 # define parameters
@@ -140,7 +142,7 @@ beta_ds <- 0
 school <- 0
 mu <- 0.23
 nu <- 0
-epsilon <- 1
+epsilon <- 0.5  # was 1, edited to be 0.5 for testing
 n_locations <- 4
 infection_threshold <- 0.5   # changed this from 0.001
 ro <- 96
@@ -152,7 +154,7 @@ init_S <- c(1, 1, .99, 1)
 init_I <- c(0, 0, .01, 0)
 init_R <- c(0, 0, 0, 0)
 
-t <- seq(from=0, to=10, by=1)  # change to from 100 to see if just taking a long time
+t <- seq(from=0, to=5, by=1)  # change to from 100 to see if just taking a long time
 
 model <- sir$new(beta_not=beta_not,
                  beta_d=beta_d,
