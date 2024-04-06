@@ -53,7 +53,7 @@ sir <- odin::odin({
   # create a vector tracking whether a location has been infected
       # 1 for infected, 0 if not infected yet
       # will be marked infected if the infection probability is above a user-specified threshold
-  infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0
+  infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0  # update this with Bernoulli check to introduce some stochasticity
 
   # PRINT STATEMENTS TO HELP WITH DEBUGGING:
   
@@ -139,7 +139,7 @@ beta_ds <- 0
 school <- 0
 mu <- 0.23
 nu <- 0
-epsilon <- 0.5  # was 1, edited to be 0.5 for testing
+epsilon <- 1  # Stephen recommended sticking to 1 for now
 n_locations <- 4
 infection_threshold <- 0.8   # not sure what this should be - ask Stephen for his thoughts
 ro <- 96
