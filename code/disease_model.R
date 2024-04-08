@@ -59,12 +59,12 @@ sir <- odin::odin({
   
   # print("infected: {infected[1]}, {infected[2]}, {infected[3]}, {infected[4]}") #, when = infected[1] == 0)
   print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
-  print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
+  # print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
   # print("dij: {dij[1,1]}, {dij[1,2]}, {dij[1,3]}, {dij[1,4]}")
   # print("k_dij: {k_dij[1,1]}, {k_dij[1,2]}, {k_dij[1,3]}, {k_dij[1,4]}")
   # print("NK_denom: {NK_denom[1,1]}, {NK_denom[1,2]}, {NK_denom[1,3]}, {NK_denom[1,4]}")
-  print("NK_denom_sum: {NK_denom_sum[1]}, {NK_denom_sum[2]}, {NK_denom_sum[3]}, {NK_denom_sum[4]}")
-  print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
+  # print("NK_denom_sum: {NK_denom_sum[1]}, {NK_denom_sum[2]}, {NK_denom_sum[3]}, {NK_denom_sum[4]}")
+  # print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
   
 
   
@@ -133,26 +133,27 @@ distances_vec <- c(0, 5, 10, 80,
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
 
 # define parameters
-beta_not <- 0.0004
-beta_d <- 0.77
+beta_not <- 0.0004  # do we need to change this given we are moving from half weeks to days for each time step?  **************
+beta_d <- 0.77  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 beta_ds <- 0
 school <- 0
-mu <- 0.23
+mu <- 0.23  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
 n_locations <- 4
 infection_threshold <- 0.8   # not sure what this should be - ask Stephen for his thoughts
-ro <- 96
-beta <- 4
-gamma <- 0  # this was 3.5, changed to 0 so nobody would recover to help with debugging
-seed <- 0.05  # proportion infected to add at first infection step
+ro <- 96  # do we need to change this given we are moving from half weeks to days for each time step?  **************
+beta <- 0.2  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
+gamma <- 0.125  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
+                    # ~8 days until recovery
+seed <- 0.1  # proportion infected to add at first infection step
 
 # user inputs
 init_S <- c(1, 1, .99, 1)
 init_I <- c(0, 0, .01, 0)
 init_R <- c(0, 0, 0, 0)
 
-t <- seq(from=0, to=5, by=1)  # change to from 100 to see if just taking a long time
+t <- seq(from=0, to=20, by=1)  # change to from 100 to see if just taking a long time
 
 model <- sir$new(beta_not=beta_not,
                  beta_d=beta_d,
@@ -169,7 +170,8 @@ model <- sir$new(beta_not=beta_not,
                  init_I=init_I,
                  init_R=init_R,
                  N=populations,
-                 dij=distances)
+                 dij=distances,
+                 seed=seed)
 
 sol <- model$run(t)
 
