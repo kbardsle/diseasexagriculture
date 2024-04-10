@@ -4,6 +4,12 @@
 # load libraries
 library(odin)
 library(tidyverse)
+library(codep)  # for calculating great circle distances
+
+
+# set working directory
+
+
 
 # build spatial model
 sir <- odin::odin({
@@ -154,7 +160,7 @@ init_S <- c(1, 1, .99, 1)
 init_I <- c(0, 0, .01, 0)
 init_R <- c(0, 0, 0, 0)
 
-t <- seq(from=0, to=20, by=1)  # change to from 100 to see if just taking a long time
+t <- seq(from=0, to=100, by=1)  # change to from 100 to see if just taking a long time
 
 model <- sir$new(beta_not=beta_not,
                  beta_d=beta_d,
@@ -195,21 +201,36 @@ sol_to_plot <- as_tibble(data.frame(model$run(t)))
 
 # Generate a figure of the output: 
 fig_sir <- sol_to_plot %>% 
-  pivot_longer(names_to='population', values_to="n", cols=c("S.1.","S.2.","S.3.","S.4.","I.1.","I.2.","I.3.","I.4.","R.1.","R.2.","R.3.","R.4.")) 
+  pivot_longer(names_to='population', values_to="n", cols=c("S.1.","S.2.","S.3.","S.4.","I.1.","I.2.","I.3.","I.4.","R.1.","R.2.","R.3.","R.4.")) %>% separate(col="population", into=c("Status","Population"))
 
-
-
-#%>% 
-  # ggplot(aes(x=, y=n, col=population)) + 
-  # geom_line(linewidth=1) #+ 
-  # scale_color_manual(values=c("S"="blue","I"="red","R"="green")) + 		
-  # theme_classic() + 
-  # theme(legend.title=element_blank(), text=element_text(size=10)) + 
-  # labs(x="Time (weeks)", y="Proportion of population")
 
 fig_sir
 
-ggplot(data = fig_sir, aes(x = step, y = n, col = population)) +
-  geom_line()
+ggplot(data = fig_sir, aes(x = step, y = n, col = Status)) +
+  geom_line() + facet_wrap(~Population)
 
 
+
+
+
+
+
+# Setting it up to run with Stephen's data
+
+
+# read in data
+coords <- as.matrix(read_csv("data/coords.csv", col_names = FALSE))
+populations <- read_csv("data/pops09.csv", col_names = FALSE)$X1
+
+# calculate great circle distances
+distances <- as.matrix(gcd.slc(coords))
+
+# set input parameters for Stephen's dataset
+n_locations <- length(populations)
+
+init_S <- rep(1,834)
+init_I <- rep(0,834)
+init_R <- rep(0,834)
+
+init_S[1] <- 0.99
+init_I[1] <- 0.01
