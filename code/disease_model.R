@@ -15,16 +15,16 @@ sir <- odin::odin({
     # if a location is still not infected, set derivatives to 0 (don't change)
 
   # SUSCEPTIBLE:
-  deriv(S[]) <- if (infected[i] > 0 && I[i] == 0) -beta*S[i]*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0) -beta*S[i]*I[i] else 0
+  update(S[]) <- if (infected[i] > 0 && I[i] == 0) S[i] - beta*S[i]*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0) S[i] - beta*S[i]*I[i] else S[i]
 
   # INFECTED:
-  deriv(I[]) <- if (infected[i] > 0 && I[i] == 0) beta*S[i]*(I[i]+seed) - gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) beta*S[i]*I[i] - gamma*I[i] else 0
+  update(I[]) <- if (infected[i] > 0 && I[i] == 0) I[i] + beta*S[i]*(I[i]+seed) - gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) I[i] + beta*S[i]*I[i] - gamma*I[i] else I[i]
   
   # RECOVERED:
-  deriv(R[]) <- if (infected[i] > 0 && I[i] == 0) gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) gamma*I[i] else 0
+  update(R[]) <- if (infected[i] > 0 && I[i] == 0) R[i] + gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) R[i] + gamma*I[i] else R[i]
 
   # DEBUGGING:
-  deriv(x[]) <- infected[i]
+  update(x[]) <- infected[i]
   
   # DEFINE TERMS:
   
@@ -53,7 +53,9 @@ sir <- odin::odin({
   # create a vector tracking whether a location has been infected
       # 1 for infected, 0 if not infected yet
       # will be marked infected if the infection probability is above a user-specified threshold
-  infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0  # update this with Bernoulli check to introduce some stochasticity
+  # infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0  # update this with Bernoulli check to introduce some stochasticity
+  infection_draws[] <- runif(0,1)
+  infected[] <- if (infection_draws[i] <= infection_prob[i]) 1 else 0
 
   # PRINT STATEMENTS TO HELP WITH DEBUGGING:
   
@@ -116,6 +118,7 @@ sir <- odin::odin({
   dim(init_S) <- n_locations
   dim(init_I) <- n_locations
   dim(init_R) <- n_locations
+  dim(infection_draws) <- n_locations
   
   dim(x) <- n_locations  # added to help with debugging
   
@@ -133,11 +136,11 @@ distances_vec <- c(0, 5, 10, 80,
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
 
 # define parameters
-beta_not <- 0.0004  # do we need to change this given we are moving from half weeks to days for each time step?  **************
-beta_d <- 0.77  # do we need to change this given we are moving from half weeks to days for each time step?  **************
+beta_not <- 0.0004*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
+beta_d <- 0.77*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 beta_ds <- 0
 school <- 0
-mu <- 0.23  # do we need to change this given we are moving from half weeks to days for each time step?  **************
+mu <- 0.23*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
 n_locations <- 4
@@ -187,5 +190,24 @@ one_check <- sol %>%
 one_check$one
 
 
+
+# plotting
+
+sol_to_plot <- as_tibble(data.frame(model$run(t)))
+
+# Generate a figure of the output: 
+fig_sir <- sol_to_plot %>% 
+  pivot_longer(names_to='population', values_to="n", cols=c("S.1.","S.2.","S.3.","S.4.","I.1.","I.2.","I.3.","I.4.","R.1.","R.2.","R.3.","R.4.")) #%>% 
+  ggplot(aes(x=, y=n, col=population)) + 
+  geom_line(linewidth=1) #+ 
+  scale_color_manual(values=c("S"="blue","I"="red","R"="green")) + 		
+  theme_classic() + 
+  theme(legend.title=element_blank(), text=element_text(size=10)) + 
+  labs(x="Time (weeks)", y="Proportion of population")
+
+fig_sir
+
+ggplot(data = fig_sir, aes(x = step, y = n, col = population)) +
+  geom_line()
 
 
