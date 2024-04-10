@@ -12,7 +12,7 @@ sir <- odin::odin({
     # if a location is newly infected (infected[i] > 0 and I[i] == 0), 
         # increase the proportion of infected by a set seed (here 0.01) to seed the infection
     # if a location was infected in an earlier time step, calculate derivatives as normal
-    # if a location is still not infected, set derivatives to 0 (don't change)
+    # if a location is still not infected, set value equal to previous time step
 
   # SUSCEPTIBLE:
   update(S[]) <- if (infected[i] > 0 && I[i] == 0) S[i] - beta*S[i]*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0) S[i] - beta*S[i]*I[i] else S[i]
@@ -53,7 +53,6 @@ sir <- odin::odin({
   # create a vector tracking whether a location has been infected
       # 1 for infected, 0 if not infected yet
       # will be marked infected if the infection probability is above a user-specified threshold
-  # infected[] <- if ((infection_prob[i] > infection_threshold) || (I[i] > 0)) 1 else 0  # update this with Bernoulli check to introduce some stochasticity
   infection_draws[] <- runif(0,1)
   infected[] <- if (infection_draws[i] <= infection_prob[i]) 1 else 0
 
@@ -88,7 +87,6 @@ sir <- odin::odin({
   nu <- user()
   epsilon <- user()
   n_locations <- user()
-  infection_threshold <- user()
   ro <- user()
   beta <- user()
   gamma <- user()
@@ -197,13 +195,17 @@ sol_to_plot <- as_tibble(data.frame(model$run(t)))
 
 # Generate a figure of the output: 
 fig_sir <- sol_to_plot %>% 
-  pivot_longer(names_to='population', values_to="n", cols=c("S.1.","S.2.","S.3.","S.4.","I.1.","I.2.","I.3.","I.4.","R.1.","R.2.","R.3.","R.4.")) #%>% 
-  ggplot(aes(x=, y=n, col=population)) + 
-  geom_line(linewidth=1) #+ 
-  scale_color_manual(values=c("S"="blue","I"="red","R"="green")) + 		
-  theme_classic() + 
-  theme(legend.title=element_blank(), text=element_text(size=10)) + 
-  labs(x="Time (weeks)", y="Proportion of population")
+  pivot_longer(names_to='population', values_to="n", cols=c("S.1.","S.2.","S.3.","S.4.","I.1.","I.2.","I.3.","I.4.","R.1.","R.2.","R.3.","R.4.")) 
+
+
+
+#%>% 
+  # ggplot(aes(x=, y=n, col=population)) + 
+  # geom_line(linewidth=1) #+ 
+  # scale_color_manual(values=c("S"="blue","I"="red","R"="green")) + 		
+  # theme_classic() + 
+  # theme(legend.title=element_blank(), text=element_text(size=10)) + 
+  # labs(x="Time (weeks)", y="Proportion of population")
 
 fig_sir
 
