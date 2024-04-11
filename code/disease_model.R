@@ -196,7 +196,7 @@ gamma <- 0.125  # based on data in papers linked here: https://docs.google.com/d
 xi <- 0.1  # **** revisit this value ****
 eta <- 0.1  # **** revisit this value ****
 
-seed <- 0.1  # proportion infected to add at first infection step
+seed <- 0.25  # proportion infected to add at first infection step (previously had as 0.1)
 
 # user inputs
 init_Sc <- c(1, 1, .99, 1)
@@ -252,21 +252,27 @@ one_check$c_one
 one_check$a_one  # ***** this doesn't add up to 1 yet *****
 
 
+
+
 # plotting
 
 sol_to_plot <- as_tibble(data.frame(model$run(t)))
 
 # Generate a figure of the output: 
 fig_sir <- sol_to_plot %>% 
-  pivot_longer(names_to='population', values_to="n", cols=-c("step")) # %>% separate(col="population", into=c("Status","Population"))
+  pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% filter(Status %in% c("Sc","Ic","Rc"))
 
-ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
-  geom_line() + theme(legend.position = "none")
+# ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
+  # geom_line() #+ theme(legend.position = "none")
 
-fig_sir %>% filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
+fig_sir %>% # filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
   ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
-  geom_line() + facet_wrap(~Population)
+  geom_line() + facet_wrap(~Population) + theme_bw()
 
+
+# looking at SIR values
+
+fig_sir %>% group_by(Population, Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
 
 
 
@@ -289,6 +295,10 @@ init_Sc <- rep(1,834)
 init_Ic <- rep(0,834)
 init_Rc <- rep(0,834)
 
+init_Sa <- rep(1,834)
+init_Ia <- rep(0,834)
+init_Ra <- rep(0,834)
+
 sites_to_seed <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
 
 for (j in sites_to_seed){
@@ -298,3 +308,8 @@ for (j in sites_to_seed){
 
 # init_Sc[1] <- 0.99
 # init_Ic[1] <- 0.01
+
+# made up household/age data
+
+avg_house <- runif(834, min=2, max=12)
+avg_age <- runif(834, min=20, max=65)
