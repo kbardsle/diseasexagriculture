@@ -20,24 +20,37 @@ sir <- odin::odin({
     # if a location was infected in an earlier time step, calculate derivatives as normal
     # if a location is still not infected, set value equal to previous time step
 
+  # Community transmission:
+  
   # SUSCEPTIBLE:
-  update(S[]) <- if (infected[i] > 0 && I[i] == 0) S[i] - beta*S[i]*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0) S[i] - beta*S[i]*I[i] else S[i]
+  update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
 
   # INFECTED:
-  update(I[]) <- if (infected[i] > 0 && I[i] == 0) I[i] + beta*S[i]*(I[i]+seed) - gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) I[i] + beta*S[i]*I[i] - gamma*I[i] else I[i]
+  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + beta_c*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0 ) Ic[i] + beta_c*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
   
   # RECOVERED:
-  update(R[]) <- if (infected[i] > 0 && I[i] == 0) R[i] + gamma*(I[i]+seed) else if (infected[i] > 0 && I[i] > 0 ) R[i] + gamma*I[i] else R[i]
+  update(Rc[]) <- if (infected[i] > 0 && Ic[i] == 0) Rc[i] + gamma*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0 ) Rc[i] + gamma*Ic[i] else Rc[i]
 
   # DEBUGGING:
   # update(x[]) <- infected[i]
+  
+  # Agricultural workforce transmission:
+  
+  # SUSCEPTIBLE:
+  update(Sa[]) <- Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i]
+  
+  # INFECTED:
+  update(Ia[]) <- Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] - gamma*Ia[i]
+  
+  # RECOVERED:
+  update(Ra[]) <- Ra[i] + gamma*Ia[i]
   
   # DEFINE TERMS:
   
   k_dij[,] <- exp(-dij[i,j]/ro)  # exponential kernel
   
   # matrix of the values for the equation numerator for all combinations of i and j:
-  NK_num[,] <- (N[j] * if (I[j] > 0) 1 else 0)^nu * k_dij[i,j]
+  NK_num[,] <- (N[j] * if (Ic[j] > 0) 1 else 0)^nu * k_dij[i,j]    # now that I is no longer a derivative, does this logic still hold? (same with lambda below) **********
       # value is 0 if location not infected, in order for this value to not be included in the sum
       # because only summing up values for infected locations
   # matrix of the values for the equation denominator for all combinations of i and j:
@@ -50,7 +63,7 @@ sir <- odin::odin({
       # as long as it isn't on the diagonal (i.e., i != j)
   NK_denom_sum[] <- sum(NK_denom[i,])  # added for debugging
   denom[] <- (sum(NK_denom[i,]) - NK_denom[i,i])^epsilon
-  lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i]) else 0
+  lambda[] <- if (Ic[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i]) else 0
   # lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
   
   # use lambda to calculate the probability of infection starting in a location:
@@ -80,9 +93,14 @@ sir <- odin::odin({
   
   N[] <- user()  # vector of population sizes for locations
   dij[,] <- user()  # matrix of values for distances between i and j locations
-  init_S[] <- user()  # vector of starting susceptible population proportions for each location
-  init_I[] <- user()  # vector of starting infected population proportions for each location
-  init_R[] <- user()  # vector of starting recovered population proportions for each location
+  # community level:
+  init_Sc[] <- user()  # vector of starting susceptible population proportions for each location
+  init_Ic[] <- user()  # vector of starting infected population proportions for each location
+  init_Rc[] <- user()  # vector of starting recovered population proportions for each location
+  # agricultural population:
+  init_Sa[] <- user()  # vector of starting susceptible population proportions for each location
+  init_Ia[] <- user()  # vector of starting infected population proportions for each location
+  init_Ra[] <- user()  # vector of starting recovered population proportions for each location
   
   # parameters
   beta_not <- user()
@@ -94,14 +112,25 @@ sir <- odin::odin({
   epsilon <- user()
   n_locations <- user()
   ro <- user()
-  beta <- user()
+  beta_c <- user()
+  beta_a <- user()
   gamma <- user()
+  xi <- user()
+  eta <- user()
   seed <- user()
   
+  # agricultural workforce community parameters
+  avg_age[] <- user()
+  avg_house[] <- user()
+  
   # DEFINE INITIAL STATE
-  initial(S[]) <- init_S[i]
-  initial(I[]) <- init_I[i]
-  initial(R[]) <- init_R[i]
+  initial(Sc[]) <- init_Sc[i]
+  initial(Ic[]) <- init_Ic[i]
+  initial(Rc[]) <- init_Rc[i]
+  
+  initial(Sa[]) <- init_Sa[i]
+  initial(Ia[]) <- init_Ia[i]
+  initial(Ra[]) <- init_Ra[i]
   
   # initial(x[]) <- 0  # added to help with debugging
   
@@ -110,19 +139,27 @@ sir <- odin::odin({
   dim(k_dij) <- c(n_locations, n_locations)
   dim(infected) <- n_locations
   dim(dij) <- c(n_locations, n_locations)
-  dim(S) <- n_locations
-  dim(I) <- n_locations
-  dim(R) <- n_locations
+  dim(Sc) <- n_locations
+  dim(Ic) <- n_locations
+  dim(Rc) <- n_locations
+  dim(Sa) <- n_locations
+  dim(Ia) <- n_locations
+  dim(Ra) <- n_locations
   dim(NK_num) <- c(n_locations, n_locations)
   dim(NK_denom) <- c(n_locations, n_locations)
   dim(NK_denom_sum) <- n_locations  # added for debugging
   dim(denom) <- n_locations  # added for debugging
   dim(lambda) <- n_locations
   dim(infection_prob) <- n_locations
-  dim(init_S) <- n_locations
-  dim(init_I) <- n_locations
-  dim(init_R) <- n_locations
+  dim(init_Sc) <- n_locations
+  dim(init_Ic) <- n_locations
+  dim(init_Rc) <- n_locations
+  dim(init_Sa) <- n_locations
+  dim(init_Ia) <- n_locations
+  dim(init_Ra) <- n_locations
   dim(infection_draws) <- n_locations
+  dim(avg_house) <- n_locations
+  dim(avg_age) <- n_locations
   
   # dim(x) <- n_locations  # added to help with debugging
   
@@ -138,6 +175,8 @@ distances_vec <- c(0, 5, 10, 80,
                    10, 200, 0, 1500,
                    80, 7, 1500, 0)*1
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
+avg_age <- c(40,20,50,25)
+avg_house <- c(8,3,5,9)
 
 # define parameters
 beta_not <- 0.0004*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
@@ -150,15 +189,23 @@ epsilon <- 1  # Stephen recommended sticking to 1 for now
 n_locations <- 4
 # infection_threshold <- 0.8   # not sure what this should be - ask Stephen for his thoughts
 ro <- 96  # do we need to change this given we are moving from half weeks to days for each time step?  **************
-beta <- 0.2  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
+beta_c <- 0.2  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
+beta_a <- 0.2  # ******  maybe revisit this value ***********
 gamma <- 0.125  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
                     # ~8 days until recovery
+xi <- 0.1  # **** revisit this value ****
+eta <- 0.1  # **** revisit this value ****
+
 seed <- 0.1  # proportion infected to add at first infection step
 
 # user inputs
-init_S <- c(1, 1, .99, 1)
-init_I <- c(0, 0, .01, 0)
-init_R <- c(0, 0, 0, 0)
+init_Sc <- c(1, 1, .99, 1)
+init_Ic <- c(0, 0, .01, 0)
+init_Rc <- c(0, 0, 0, 0)
+
+init_Sa <- c(1, 1, 1, 1)
+init_Ia <- c(0, 0, 0, 0)
+init_Ra <- c(0, 0, 0, 0)
 
 t <- seq(from=0, to=100, by=1)  # change to from 100 to see if just taking a long time
 
@@ -170,13 +217,21 @@ model <- sir$new(beta_not=beta_not,
                  epsilon=epsilon,
                  n_locations=n_locations,
                  ro=ro,
-                 beta=beta,
+                 beta_c=beta_c,
+                 beta_a=beta_a,
                  gamma=gamma,
-                 init_S=init_S,
-                 init_I=init_I,
-                 init_R=init_R,
+                 xi=xi,
+                 eta=eta,
+                 init_Sc=init_Sc,
+                 init_Ic=init_Ic,
+                 init_Rc=init_Rc,
+                 init_Sa=init_Sa,
+                 init_Ia=init_Ia,
+                 init_Ra=init_Ra,
                  N=populations,
                  dij=distances,
+                 avg_house=avg_house,
+                 avg_age=avg_age,
                  seed=seed)
 
 sol <- model$run(t)
@@ -185,13 +240,16 @@ sol <- model$run(t)
 # check if values add to 1
 one_check <- sol %>%
   as.data.frame() %>%
-  rename('S1' = 'S[1]',
-         'I1' = 'I[1]',
-         'R1' = 'R[1]') %>%
-  mutate(one = S1 + I1 + R1)
+  rename('Sc1' = 'Sc[1]',
+         'Ic1' = 'Ic[1]',
+         'Rc1' = 'Rc[1]',
+         'Sa1' = 'Sa[1]',
+         'Ia1' = 'Ia[1]',
+         'Ra1' = 'Ra[1]') %>%
+  mutate(c_one = Sc1 + Ic1 + Rc1, a_one = Sa1 + Ia1 + Ra1)
 
-one_check$one
-
+one_check$c_one
+one_check$a_one  # ***** this doesn't add up to 1 yet *****
 
 
 # plotting
@@ -227,16 +285,16 @@ distances <- as.matrix(gcd.slc(coords))
 # set input parameters for Stephen's dataset
 n_locations <- length(populations)
 
-init_S <- rep(1,834)
-init_I <- rep(0,834)
-init_R <- rep(0,834)
+init_Sc <- rep(1,834)
+init_Ic <- rep(0,834)
+init_Rc <- rep(0,834)
 
 sites_to_seed <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
 
 for (j in sites_to_seed){
-  init_S[j] <- 0.99
-  init_I[j] <- 0.01
+  init_Sc[j] <- 0.99
+  init_Ic[j] <- 0.01
 }
 
-# init_S[1] <- 0.99
-# init_I[1] <- 0.01
+# init_Sc[1] <- 0.99
+# init_Ic[1] <- 0.01
