@@ -169,7 +169,6 @@ model <- sir$new(beta_not=beta_not,
                  mu=mu, nu=nu,
                  epsilon=epsilon,
                  n_locations=n_locations,
-                 infection_threshold=infection_threshold,
                  ro=ro,
                  beta=beta,
                  gamma=gamma,
@@ -204,7 +203,7 @@ fig_sir <- sol_to_plot %>%
   pivot_longer(names_to='population', values_to="n", cols=-c("step")) # %>% separate(col="population", into=c("Status","Population"))
 
 ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
-  geom_line()
+  geom_line() + theme(legend.position = "none")
 
 fig_sir %>% filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
   ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
@@ -232,5 +231,12 @@ init_S <- rep(1,834)
 init_I <- rep(0,834)
 init_R <- rep(0,834)
 
-init_S[1] <- 0.99
-init_I[1] <- 0.01
+sites_to_seed <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
+
+for (j in sites_to_seed){
+  init_S[j] <- 0.99
+  init_I[j] <- 0.01
+}
+
+# init_S[1] <- 0.99
+# init_I[1] <- 0.01
