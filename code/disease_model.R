@@ -37,13 +37,13 @@ sir <- odin::odin({
   # Agricultural workforce transmission:
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
-  update(Ra[]) <- Ra[i] + gamma*Ia[i]
+  update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
   
   # DEFINE TERMS:
   
@@ -175,8 +175,8 @@ distances_vec <- c(0, 5, 10, 80,
                    10, 200, 0, 1500,
                    80, 7, 1500, 0)*1
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
-avg_age <- c(40,20,50,25)
-avg_house <- c(8,3,5,9)
+avg_age <- c(0.3,0.5,0.7,0.9)
+avg_house <- c(0.3,0.5,0.7,0.9)
 n_locations <- 4
 
 
@@ -194,8 +194,8 @@ beta_c <- 0.2  # based on data in papers linked here: https://docs.google.com/do
 beta_a <- 0.2  # ******  maybe revisit this value ***********
 gamma <- 0.125  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
                     # ~8 days until recovery
-xi <- 0.1  # **** revisit this value ****
-eta <- 0.1  # **** revisit this value ****
+xi <- 0.05  # **** revisit this value ****
+eta <- 0.05  # **** revisit this value ****
 
 seed <- 0.25  # proportion infected to add at first infection step (previously had as 0.1)
 
@@ -261,12 +261,13 @@ sol_to_plot <- as_tibble(data.frame(model$run(t)))
 
 # Generate a figure of the output: 
 fig_sir <- sol_to_plot %>% 
-  pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% filter(Status %in% c("Sc","Ic","Rc"))
+  pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% #filter(Status %in% c("Sc","Ic","Rc")) %>% 
+  filter(Status %in% c("Sa","Ia","Ra"))
 
 # ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
   # geom_line() #+ theme(legend.position = "none")
 
-fig_sir %>% filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
+fig_sir %>% filter(Population %in% c("100","200","300","400","500","600","700","800")) %>% 
   ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
   geom_line() + facet_wrap(~Population) + theme_bw()
 
@@ -275,7 +276,14 @@ fig_sir %>% filter(Population %in% c("1","2","3","4","5","6","7","8")) %>%
 
 fig_sir %>% group_by(Population, Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
 
+# checking first time step for location infection
 
+ind <- do.call(rbind, lapply(836:1669, function(i){
+  data.frame(column_index = i,
+             infection_start_index = min(which(sol_to_plot[,i] != 0)))
+}))
+
+summary(ind)
 
 
 
@@ -300,7 +308,7 @@ init_Sa <- rep(1,834)
 init_Ia <- rep(0,834)
 init_Ra <- rep(0,834)
 
-sites_to_seed <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
+sites_to_seed <- c(1)  #,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
 
 for (j in sites_to_seed){
   init_Sc[j] <- 0.99
@@ -312,5 +320,5 @@ for (j in sites_to_seed){
 
 # made up household/age data
 
-avg_house <- runif(834, min=2, max=12)
-avg_age <- runif(834, min=20, max=65)
+avg_house <- runif(834, min=0, max=1)
+avg_age <- runif(834, min=0, max=1)
