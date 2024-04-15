@@ -23,13 +23,13 @@ sir <- odin::odin({
   # Community transmission:
   
   # SUSCEPTIBLE:
-  update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
+  update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
 
   # INFECTED:
-  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + beta_c*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0 ) Ic[i] + beta_c*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
+  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + beta_c*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Ic[i] + beta_c*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
   
   # RECOVERED:
-  update(Rc[]) <- if (infected[i] > 0 && Ic[i] == 0) Rc[i] + gamma*(Ic[i]+seed) else if (infected[i] > 0 && Ic[i] > 0 ) Rc[i] + gamma*Ic[i] else Rc[i]
+  update(Rc[]) <- if (infected[i] > 0 && Ic[i] == 0) Rc[i] + gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Rc[i] + gamma*Ic[i] else Rc[i]
 
   # DEBUGGING:
   # update(x[]) <- infected[i]
@@ -266,7 +266,7 @@ fig_sir <- sol_to_plot %>%
 # ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
   # geom_line() #+ theme(legend.position = "none")
 
-fig_sir %>% #filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
+fig_sir %>% filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
   ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
   geom_line() + facet_wrap(~Population) + theme_bw()
 
