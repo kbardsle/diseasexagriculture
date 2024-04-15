@@ -177,6 +177,8 @@ distances_vec <- c(0, 5, 10, 80,
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
 avg_age <- c(40,20,50,25)
 avg_house <- c(8,3,5,9)
+n_locations <- 4
+
 
 # define parameters
 beta_not <- 0.0004*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
@@ -186,7 +188,6 @@ school <- 0
 mu <- 0.23*(1/3.5)  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
-n_locations <- 4
 # infection_threshold <- 0.8   # not sure what this should be - ask Stephen for his thoughts
 ro <- 96  # do we need to change this given we are moving from half weeks to days for each time step?  **************
 beta_c <- 0.2  # based on data in papers linked here: https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
@@ -265,7 +266,7 @@ fig_sir <- sol_to_plot %>%
 # ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
   # geom_line() #+ theme(legend.position = "none")
 
-fig_sir %>% # filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
+fig_sir %>% #filter(Population %in% c("1","2","3","4","5","6","7","8")) %>% 
   ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
   geom_line() + facet_wrap(~Population) + theme_bw()
 
