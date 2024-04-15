@@ -261,15 +261,30 @@ sol_to_plot <- as_tibble(data.frame(model$run(t)))
 
 # Generate a figure of the output: 
 fig_sir <- sol_to_plot %>% 
-  pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% #filter(Status %in% c("Sc","Ic","Rc")) %>% 
-  filter(Status %in% c("Sa","Ia","Ra"))
+  pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% separate(col="Status", into=c("Disease_Status","Community"),sep=1:1)# %>% #filter(Status %in% c("Sc","Ic","Rc")) %>% filter(Status %in% c("Sa","Ia","Ra"))
+
+
+data_reformat <- fig_sir %>% pivot_wider(names_from = "Disease_Status", values_from = "n")
+
+pops <- sample(unique(data_reformat$Population), 50)
+
+data_reformat %>% filter(Population %in% pops) %>% 
+ggplot() + 
+  geom_line(aes(x=step, y=S, color=Population, linetype=Community)) + 
+  geom_line(aes(x=step, y=I, color=Population, linetype=Community)) + 
+  geom_line(aes(x=step, y=R, color=Population, linetype=Community))
 
 # ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
   # geom_line() #+ theme(legend.position = "none")
 
-fig_sir %>% filter(Population %in% c("100","200","300","400","500","600","700","800")) %>% 
-  ggplot(aes(x = step, y = n, linetype=Status, col = Population)) +
+fig_sir %>% filter(Population %in% c("1","100","200","300","400","500","600","700","800")) %>% 
+  ggplot(aes(x = step, y = n, col = Disease_Status, linetype=Community)) +
   geom_line() + facet_wrap(~Population) + theme_bw()
+
+fig_sir %>% 
+  ggplot(aes(x = step, y = n, col = Disease_Status, linetype=Community)) +
+  geom_line() + theme_bw()
+
 
 
 # looking at SIR values
