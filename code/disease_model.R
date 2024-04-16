@@ -6,6 +6,10 @@
 library(odin)
 library(tidyverse)
 library(codep)  # for calculating great circle distances
+library(maps)  # for plotting the map
+library(mapdata)  # for plotting the map
+library(viridis)
+
 
 
 # SET WORKING DIRECTORY -------------------------------------
@@ -322,11 +326,12 @@ fig_sir %>% group_by(Population, Status) %>% summarize(min=min(n), max=max(n), m
 
 # checking first time step for location infection
 ind <- do.call(rbind, lapply(836:1669, function(i){
-  data.frame(column_index = i,
-             infection_start_index = min(which(sol_to_plot[,i] != 0)))
+  data.frame(population = i-835, infection_start_index = min(which(sol_to_plot[,i] != 0)))
 }))
 
 summary(ind)
+
+# make dataframe for mapping
 
 
 # PLOTTING -------------------------------------
@@ -354,6 +359,29 @@ fig_data %>% filter(Population %in% pops_4) %>%
 fig_data %>% 
   ggplot(aes(x = step, y = n, col = Disease_Status, linetype=Community, group_by=Population)) +
   geom_line() + theme_bw()
+
+# map plot
+infection_data <- data.frame(coords, ind$infection_start_index)
+
+infection_data <- infection_data %>% rename(latitude = X2,
+       longitude = X1,
+       infection_start_index = ind.infection_start_index)
+
+us_map <- map_data("state")
+
+ggplot() +
+  geom_polygon(data = us_map, 
+               aes(x = long, y = lat, group = group), 
+               fill = "white") +
+  geom_polygon(data = map_data("state"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", fill = NA) +
+  geom_point(data = infection_data, 
+             aes(x = longitude, y = latitude, color = infection_start_index), 
+             size = 2.5, alpha=0.9) + 
+  scale_color_viridis(direction = -1, name = "Time Step") + 
+  labs(title = "Infection spread across locations") +
+  theme_minimal() 
 
 
 
