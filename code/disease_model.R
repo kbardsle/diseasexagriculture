@@ -322,7 +322,7 @@ one_check$c_one
 one_check$a_one
 
 # looking at SIR values
-fig_sir %>% group_by(Population, Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
+fig_data %>% group_by(Population, Disease_Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
 
 # checking first time step for location infection
 ind <- do.call(rbind, lapply(836:1669, function(i){
@@ -330,8 +330,6 @@ ind <- do.call(rbind, lapply(836:1669, function(i){
 }))
 
 summary(ind)
-
-# make dataframe for mapping
 
 
 # PLOTTING -------------------------------------
@@ -345,7 +343,7 @@ ggplot() +
   geom_line(aes(x=step, y=S, color=Population, linetype=Community)) + 
   geom_line(aes(x=step, y=I, color=Population, linetype=Community)) + 
   geom_line(aes(x=step, y=R, color=Population, linetype=Community)) + 
-  theme_bw()
+  theme_bw() + guides(color=FALSE)
 
 # ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
   # geom_line() #+ theme(legend.position = "none")
