@@ -9,6 +9,8 @@ library(codep)  # for calculating great circle distances
 library(maps)  # for plotting the map
 library(mapdata)  # for plotting the map
 library(viridis)
+library(ggnewscale)
+library(cowplot)
 
 
 
@@ -377,12 +379,48 @@ ggplot() +
   geom_point(data = infection_data, 
              aes(x = longitude, y = latitude, color = infection_start_index), 
              size = 2.5, alpha=0.9) + 
-  scale_color_viridis(direction = -1, name = "Time Step") + 
+  scale_color_viridis(direction = -1, name = "Days to Infection") + 
   labs(title = "Infection spread across locations") +
   theme_minimal() 
 
+# SIR plot 
+# make palettes
+reds_pal <- scales::hue_pal(h = c(0, 60))
+greens_pal <- scales::hue_pal(h = c(80, 140))
+blues_pal <- scales::hue_pal(h = c(200, 260))
+scales::show_col(blues_pal(50))
 
+# blue for s, red for I, green for R
+SIR_no_legend <- data_reformat %>% filter(Population %in% pops_50) %>% ggplot() + 
+  geom_line(aes(x=step, y=S, color=Population, linetype=Community)) +
+  #scale_color_stepsn(colors = c("#f5b0b0", "#400202")) +
+  scale_color_manual(values = blues_pal(50)) +
+  #scale_color_viridis(discrete = TRUE, option = "viridis") +
+  new_scale_color() +
+  geom_line(aes(x=step, y=I, color=Population, linetype=Community)) +
+  #scale_color_viridis(discrete = TRUE, option = "rocket") +
+  scale_color_manual(values = reds_pal(50)) +
+  new_scale_color() +
+  geom_line(aes(x=step, y=R, color=Population, linetype=Community)) + 
+  #scale_color_viridis(discrete = TRUE, option = "mako") +
+  scale_color_manual(values = greens_pal(50)) +
+  theme_bw() + 
+  guides(color=FALSE) +
+  theme(legend.position = "none")
 
+# make legend
+legend_plot <- get_legend(fig_data %>% 
+  filter(Population %in% pops_50) %>% 
+  mutate(Disease_Status = fct_relevel(Disease_Status, c("S", "I", "R"))) %>%
+  ggplot(aes(x = step, y = n, color = Disease_Status, linetype = Community)) + 
+  geom_line() +
+  scale_color_manual(values = c(S = "blue", I = "red", R = "green")) +
+  scale_linetype_manual(labels = c("Agricultural Workers", "General Population"), values = c(1, 2)) +
+  theme(legend.text = element_text(size = 20),
+        legend.title = element_text(size = 30))
+  )
+
+plot_grid(SIR_no_legend, legend_plot, rel_widths = c(0.8, 0.2))
 
 
 # PREPARE TO INPUT AG DATA -------------------------------------
