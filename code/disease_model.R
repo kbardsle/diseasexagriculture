@@ -210,6 +210,7 @@ t <- seq(from=0, to=100, by=1)
 # use basic test data set - 4 locations
 
 populations <- c(100, 100, 100, 100)
+normalized_populations <- c(1,1,1,1)
 distances_vec <- c(0, 5, 10, 80,
                    5, 0, 200, 7,
                    10, 200, 0, 1500,
@@ -232,6 +233,9 @@ init_Ra <- c(0, 0, 0, 0)
 # read in data
 coords <- as.matrix(read_csv("data/coords.csv", col_names = FALSE))
 populations <- read_csv("data/pops09.csv", col_names = FALSE)$X1
+
+avg_pop <- mean(populations)
+normalized_populations <- populations/avg_pop
 
 # calculate great circle distances
 distances <- as.matrix(gcd.slc(coords))
@@ -280,7 +284,7 @@ model <- sir$new(beta_not=beta_not,
                  init_Sa=init_Sa,
                  init_Ia=init_Ia,
                  init_Ra=init_Ra,
-                 N=populations,
+                 N=normalized_populations,
                  dij=distances,
                  avg_house=avg_house,
                  avg_age=avg_age,
