@@ -67,7 +67,7 @@ sir <- odin::odin({
   k_dij[,] <- exp(-dij[i,j]/ro)  # exponential kernel
   
   # matrix of the values for the equation numerator for all combinations of i and j:
-  NK_num[,] <- (N[j] * if (Ic[j] > 0) 1 else 0)^nu * k_dij[i,j]
+  NK_num[,] <- N[j]^nu * k_dij[i,j] * (if (Ic[j] > 0) 1 else 0)
       # value is 0 if location not infected, in order for this value to not be included in the sum
       # because only summing up values for infected locations
   # matrix of the values for the equation denominator for all combinations of i and j:
@@ -80,7 +80,7 @@ sir <- odin::odin({
       # as long as it isn't on the diagonal (i.e., i != j)
   NK_denom_sum[] <- sum(NK_denom[i,])  # added for debugging
   denom[] <- (sum(NK_denom[i,]) - NK_denom[i,i])^epsilon
-  lambda[] <- if (Ic[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i]) else 0
+  lambda[] <- if (Ic[i] == 0) (beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/(denom[i])) else 0
   # lambda[] <- if (I[i] == 0) beta_not + (beta_d + (school * beta_ds)) * N[i]^mu * (sum(NK_num[i,]))/((sum(NK_denom[i,]) - NK_denom[i,i])^epsilon) else 0
   
   # use lambda to calculate the probability of infection starting in a location:
@@ -95,10 +95,11 @@ sir <- odin::odin({
   # PRINT STATEMENTS TO HELP WITH DEBUGGING:
   
   # print("infected: {infected[1]}, {infected[2]}, {infected[3]}, {infected[4]}") #, when = infected[1] == 0)
-  # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}")
+  # print("infection probs: {infection_prob[1]}, {infection_prob[2]}, {infection_prob[3]}, {infection_prob[4]}, {infection_prob[5]}, {infection_prob[6]}, {infection_prob[7]}, {infection_prob[805]}")
   # print("lambda: {lambda[1]}, {lambda[2]}, {lambda[3]}, {lambda[4]}")
   # print("dij: {dij[1,1]}, {dij[1,2]}, {dij[1,3]}, {dij[1,4]}")
   # print("k_dij: {k_dij[1,1]}, {k_dij[1,2]}, {k_dij[1,3]}, {k_dij[1,4]}")
+  # print("NK_num: {NK_num[1,1]}, {NK_num[2,1]}, {NK_num[2,3]}, {NK_num[3,1]}, {NK_num[4,1]}, {NK_num[5,1]}")
   # print("NK_denom: {NK_denom[1,1]}, {NK_denom[1,2]}, {NK_denom[1,3]}, {NK_denom[1,4]}")
   # print("NK_denom_sum: {NK_denom_sum[1]}, {NK_denom_sum[2]}, {NK_denom_sum[3]}, {NK_denom_sum[4]}")
   # print("denom: {denom[1]}, {denom[2]}, {denom[3]}, {denom[4]}")
@@ -185,14 +186,13 @@ sir <- odin::odin({
 
 # DEFINE PARAMETERS
 
-beta_not <- 0.0004*(1/3.5)  # do we need to change this for time steps of days **************
-beta_d <- 0.77*(1/3.5)  # do we need to change this for time steps of days **************
+beta_not <- 0.0004*(1/3.5)  # adjusted for half weeks --> days
+beta_d <- 0.77*(1/3.5)  # adjusted for half weeks --> days
 beta_ds <- 0
 school <- 0
-mu <- 0.23*(1/3.5)  # do we need to change this for time steps of days **************
-nu <- 0
+mu <- 0.23  # likely don't have to adjust for days/half weeks
 epsilon <- 1  # Stephen recommended sticking to 1 for now
-ro <- 96  # do we need to change this for time steps of days **************
+ro <- 96
 beta_c <- 0.2  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
 beta_a <- 0.2  # ******  maybe revisit this value ***********
@@ -204,7 +204,7 @@ eta <- 0.05  # coefficient for average household age **** revisit this value aft
 
 seed <- 0.01  # proportion infected to add at first infection step
 
-t <- seq(from=0, to=100, by=1)
+t <- seq(from=0, to=150, by=1)
 
 
 # INPUT DATA
@@ -241,6 +241,7 @@ normalized_populations <- populations/avg_pop
 
 # calculate great circle distances
 distances <- as.matrix(gcd.slc(coords))
+# distances <- distances * 1000
 
 # set input parameters for Stephen's dataset
 n_locations <- length(populations)
@@ -337,6 +338,17 @@ ind <- do.call(rbind, lapply(836:1669, function(i){
 
 summary(ind)
 
+ggplot(data=ind, mapping=aes(x=infection_start_index)) + geom_histogram()
+
+# distance from springfield
+spring_dist <- distances[,1]
+data.frame(ind=ind$infection_start_index, dist=spring_dist) %>% 
+  ggplot(mapping=aes(x=dist, y=ind)) + geom_point()
+
+# population size 
+data.frame(ind=ind$infection_start_index, pop=populations) %>% 
+  ggplot(mapping=aes(x=pop, y=ind)) + geom_point()
+
 
 # PLOTTING -------------------------------------
 
@@ -373,7 +385,7 @@ infection_data <- infection_data %>% rename(latitude = X2,
 
 us_map <- map_data("state")
 
-ggplot() +
+map <- ggplot() +
   geom_polygon(data = us_map, 
                aes(x = long, y = lat, group = group), 
                fill = "white") +
@@ -382,10 +394,16 @@ ggplot() +
                color = "black", fill = NA) +
   geom_point(data = infection_data, 
              aes(x = longitude, y = latitude, color = infection_start_index), 
-             size = 2.5, alpha=0.9) + 
+             size = 1.5, alpha=0.85) + 
   scale_color_viridis(direction = -1, name = "Days to Infection") + 
   labs(title = "Infection spread across locations") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "white"),
+      plot.background = element_rect(fill = "white"),  # Set plot background to white
+      plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))  # Set plot margins to ensure white background around the plot
+map
+# ggsave("infection_map_4.22.24.png", plot=map, width=8, height=5)
+
 
 # SIR plot 
 # make palettes
