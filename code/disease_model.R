@@ -427,6 +427,7 @@ SIR_no_legend <- data_reformat %>% filter(Population %in% pops_50) %>% ggplot() 
   #scale_color_viridis(discrete = TRUE, option = "mako") +
   scale_color_manual(values = greens_pal(50)) +
   theme_bw() + 
+  labs(y="Population proportion", x="Timestep") +
   guides(color=FALSE) +
   theme(legend.position = "none")
 
@@ -438,8 +439,8 @@ legend_plot <- get_legend(fig_data %>%
   geom_line() +
   scale_color_manual(values = c(S = "blue", I = "red", R = "green")) +
   scale_linetype_manual(labels = c("Agricultural Workers", "General Population"), values = c(1, 2)) +
-  theme(legend.text = element_text(size = 20),
-        legend.title = element_text(size = 30))
+  theme(legend.text = element_text(size = 10),
+        legend.title = element_text(size = 15))
   )
 
 plot_grid(SIR_no_legend, legend_plot, rel_widths = c(0.8, 0.2))
