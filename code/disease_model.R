@@ -191,6 +191,7 @@ beta_d <- 0.77*(1/3.5)  # adjusted for half weeks --> days
 beta_ds <- 0
 school <- 0
 mu <- 0.23  # likely don't have to adjust for days/half weeks
+nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
 ro <- 96
 beta_c <- 0.2  # based on data in papers linked here: 
