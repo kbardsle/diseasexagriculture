@@ -134,6 +134,7 @@ sir <- odin::odin({
   xi <- user()
   eta <- user()
   seed <- user()
+  assortment_prob <- user(0.5)
   
   # agricultural workforce community parameters
   avg_age[] <- user()
