@@ -54,10 +54,10 @@ sir <- odin::odin({
         # use the calculated value as the new value
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
