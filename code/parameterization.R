@@ -81,7 +81,7 @@ demographic_vars <- list(demographic_data_normalized$proportion_crowded, demogra
 # run parameterization code
 coefficient_vals <- parameterize(r_not = 1.6,
                                  gamma = 0.125,
-                                 beta_not = 0,
+                                 beta_not = 0.1,
                                  vars = demographic_vars)
 
 
