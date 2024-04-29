@@ -197,12 +197,12 @@ epsilon <- 1  # Stephen recommended sticking to 1 for now
 ro <- 96
 beta_c <- 0.2  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
-beta_a <- 0.1  # ******  maybe revisit this value ***********
+beta_a <- 0.1 
 gamma <- 0.125  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
                     # ~8 days until recovery
-xi <- 0.92  # coefficient for proportion crowded **** revisit this value after parameter fitting ****
-eta <- 0.25  # coefficient for proportion with kids **** revisit this value after parameter fitting ****
+xi <- 0.92  # coefficient for proportion crowded - based on parameterization
+eta <- 0.25  # coefficient for proportion with kids - based on parameterization
 
 seed <- 0.01  # proportion infected to add at first infection step
 
@@ -211,32 +211,83 @@ t <- seq(from=0, to=150, by=1)
 
 # INPUT DATA
 
-# use basic test data set - 4 locations
+# # use basic test data set - 4 locations
+# 
+# populations <- c(100, 100, 100, 100)
+# normalized_populations <- c(1,1,1,1)
+# distances_vec <- c(0, 5, 10, 80,
+#                    5, 0, 200, 7,
+#                    10, 200, 0, 1500,
+#                    80, 7, 1500, 0)*1
+# distances <- matrix(data = distances_vec, nr = 4, nc = 4)
+# proportion_w_kids <- c(0.3,0.5,0.7,0.9)
+# proportion_crowded <- c(0.3,0.5,0.7,0.9)
+# n_locations <- 4
+# 
+# init_Sc <- c(1, 1, .99, 1)
+# init_Ic <- c(0, 0, .01, 0)
+# init_Rc <- c(0, 0, 0, 0)
+# 
+# init_Sa <- c(1, 1, 1, 1)
+# init_Ia <- c(0, 0, 0, 0)
+# init_Ra <- c(0, 0, 0, 0)
+# 
+# # use test data from Stephen
+# 
+# # read in data
+# coords <- as.matrix(read_csv("data/coords.csv", col_names = FALSE))
+# populations <- read_csv("data/pops09.csv", col_names = FALSE)$X1
+# demographic_data <- read_csv("data/migrants_merger.csv")
+# 
+# clean_demo_data <- demographic_data %>%
+#   mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
+#   select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
+#   filter(FY == 2017) %>%
+#   # strip commas from Value column
+#   mutate(Value = str_replace(Value, ",", "")) %>%
+#   # sum together values for two types of non-migrants
+#   group_by(State, FY, Category) %>%
+#   summarize(Value = sum(as.numeric(Value)), 
+#             proportion_crowded = median(as.numeric(proportion_crowded)), 
+#             proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
+#   # take weighted mean for migrant and non migrant demographic variables
+#   group_by(State) %>%
+#   summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
+#             proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+# 
+# avg_pop <- mean(populations)
+# normalized_populations <- populations/avg_pop
+# 
+# # calculate great circle distances
+# distances <- as.matrix(gcd.slc(coords))
+# # distances <- distances * 1000
+# 
+# # set input parameters for Stephen's dataset
+# n_locations <- length(populations)
+# 
+# init_Sc <- rep(1,834)
+# init_Ic <- rep(0,834)
+# init_Rc <- rep(0,834)
+# 
+# init_Sa <- rep(1,834)
+# init_Ia <- rep(0,834)
+# init_Ra <- rep(0,834)
+# 
+# sites_to_seed <- c(1)  #,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
+# 
+# for (j in sites_to_seed){
+#   init_Sc[j] <- 0.99
+#   init_Ic[j] <- 0.01
+# }
+# 
+# # made up household/age data
+# proportion_crowded <- runif(834, min=0, max=1)
+# proportion_w_kids <- runif(834, min=0, max=1)
 
-populations <- c(100, 100, 100, 100)
-normalized_populations <- c(1,1,1,1)
-distances_vec <- c(0, 5, 10, 80,
-                   5, 0, 200, 7,
-                   10, 200, 0, 1500,
-                   80, 7, 1500, 0)*1
-distances <- matrix(data = distances_vec, nr = 4, nc = 4)
-proportion_w_kids <- c(0.3,0.5,0.7,0.9)
-proportion_crowded <- c(0.3,0.5,0.7,0.9)
-n_locations <- 4
-
-init_Sc <- c(1, 1, .99, 1)
-init_Ic <- c(0, 0, .01, 0)
-init_Rc <- c(0, 0, 0, 0)
-
-init_Sa <- c(1, 1, 1, 1)
-init_Ia <- c(0, 0, 0, 0)
-init_Ra <- c(0, 0, 0, 0)
-
-# use test data from Stephen
-
-# read in data
-coords <- as.matrix(read_csv("data/coords.csv", col_names = FALSE))
-populations <- read_csv("data/pops09.csv", col_names = FALSE)$X1
+# use 2017 population and latitude/longitude data
+data_2017 <- read_csv("data/2017_pop_lat_long_data_states.csv")
+coords <- as.matrix(data_2017 %>% select(c("WEIGHTED_LONG","WEIGHTED_LAT")))
+populations <- data_2017$POP3
 demographic_data <- read_csv("data/migrants_merger.csv")
 
 clean_demo_data <- demographic_data %>%
@@ -255,9 +306,6 @@ clean_demo_data <- demographic_data %>%
   summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
             proportion_w_kids = weighted.mean(proportion_w_kids, Value))
 
-
-
-
 avg_pop <- mean(populations)
 normalized_populations <- populations/avg_pop
 
@@ -265,16 +313,16 @@ normalized_populations <- populations/avg_pop
 distances <- as.matrix(gcd.slc(coords))
 # distances <- distances * 1000
 
-# set input parameters for Stephen's dataset
+# set input parameters for 2017 data
 n_locations <- length(populations)
 
-init_Sc <- rep(1,834)
-init_Ic <- rep(0,834)
-init_Rc <- rep(0,834)
+init_Sc <- rep(1,n_locations)
+init_Ic <- rep(0,n_locations)
+init_Rc <- rep(0,n_locations)
 
-init_Sa <- rep(1,834)
-init_Ia <- rep(0,834)
-init_Ra <- rep(0,834)
+init_Sa <- rep(1,n_locations)
+init_Ia <- rep(0,n_locations)
+init_Ra <- rep(0,n_locations)
 
 sites_to_seed <- c(1)  #,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
 
@@ -283,9 +331,6 @@ for (j in sites_to_seed){
   init_Ic[j] <- 0.01
 }
 
-# made up household/age data
-proportion_crowded <- runif(834, min=0, max=1)
-proportion_w_kids <- runif(834, min=0, max=1)
 
 
 # RUN MODEL -------------------------------------
@@ -466,28 +511,6 @@ legend_plot <- get_legend(fig_data %>%
   )
 
 plot_grid(SIR_no_legend, legend_plot, rel_widths = c(0.8, 0.2))
-
-
-# PREPARE TO INPUT AG DATA -------------------------------------
-
-###################################
-# FUNCTION: normalize_ag_data
-# description: normalize data in column to be between 0 and 1
-# inputs: column to be normalized
-# outputs: normalized column
-# ---------------------------------
-normalize_ag_data <- function(input_col){
-  
-  min <- min(input_col)
-  range <- max(input_col) - min
-  
-  output_col <- (input_col - min)/range
-  
-  return(output_col)
-
-}
-###################################
-
 
 
 
