@@ -81,5 +81,36 @@ zips_df <- zips_df %>%
 df_US_states <- full_join(df_US, zips_df, by="ZIP3") %>% filter(!is.na(POP3))
 
 # save as csv
-write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
+# write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
+df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
 
+# combine with demographic data for ag workers
+demographic_data <- read_csv("data/migrants_merger.csv")
+
+clean_demo_data <- demographic_data %>%
+  mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
+  select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
+  filter(FY == 2017) %>%
+  # strip commas from Value column
+  mutate(Value = str_replace(Value, ",", "")) %>%
+  # sum together values for two types of non-migrants
+  group_by(State, FY, Category) %>%
+  summarize(Value = sum(as.numeric(Value)), 
+            proportion_crowded = median(as.numeric(proportion_crowded)), 
+            proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
+  # take weighted mean for migrant and non migrant demographic variables
+  group_by(State) %>%
+  summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
+            proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+
+# add state names
+colnames(state_df)[2] <- "State_Abbreviation"
+colnames(df_US_states)[5] <- "State_Abbreviation"
+df_US_states_names <- full_join(df_US_states, state_df, by="State_Abbreviation")
+df_US_states_names$State <- toupper(df_US_states_names$State)
+
+# do join with demographic data
+data_complete_ag <- full_join(df_US_states_names, clean_demo_data, by="State")
+
+# save as csv
+write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
