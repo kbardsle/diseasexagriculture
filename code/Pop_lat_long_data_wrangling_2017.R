@@ -59,5 +59,51 @@ df_3digit_filtered <- df_3digit %>% filter(POP3 >= 20000)
 # filter for contiguous US
 df_US <- df_3digit_filtered %>% filter(WEIGHTED_LONG > -126 & WEIGHTED_LONG < -65) %>% filter(WEIGHTED_LAT > 23 & WEIGHTED_LAT < 50)
 
+# add column for state
+get_state <- function(latitude, longitude) {
+  states <- map("state", fill = TRUE, plot = FALSE)
+  point <- data.frame(longitude = longitude, latitude = latitude)
+  state <- point_in_poly(point, states)
+  return(state$names)
+}
+
+
+# Load required package
+library(maps)
+
+# Install and load the zipcode package
+install.packages("zipcode")
+library(zipcode)
+
+# Function to get state information from 3-digit ZIP codes
+get_state_from_zip <- function(zip_codes) {
+  # Load ZIP code dataset
+  data(zipcode)
+  
+  # Extract state information
+  states <- sapply(zip_codes, function(zip) {
+    zip_info <- subset(zipcode, zip == substr(zipcode$zip, 1, 3))
+    if (nrow(zip_info) > 0) {
+      return(unique(zip_info$state)[1])
+    } else {
+      return(NA)
+    }
+  })
+  
+  return(states)
+}
+
+# Example 3-digit ZIP codes
+zip_codes <- c("100", "902", "606")
+
+# Get state information
+state_info <- get_state_from_zip(zip_codes)
+
+# Print state information
+print(state_info)
+
+
+
+
 # save as csv
 write.csv(df_US, "data/2017_pop_lat_long_data.csv", row.names=FALSE)
