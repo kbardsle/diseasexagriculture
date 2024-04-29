@@ -1,3 +1,5 @@
+# parameterize model with demographic data from the general population
+
 # import libraries
 library(tidyverse)
 
