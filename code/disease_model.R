@@ -54,10 +54,10 @@ sir <- odin::odin({
         # use the calculated value as the new value
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*avg_age[i])*Ia[i]))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i])+((beta_a+xi*avg_house[i]+eta*(1-avg_age[i]))*Ia[i]))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
@@ -134,10 +134,11 @@ sir <- odin::odin({
   xi <- user()
   eta <- user()
   seed <- user()
+  assortment_prob <- user(0.5)
   
   # agricultural workforce community parameters
-  avg_age[] <- user()
-  avg_house[] <- user()
+  proportion_w_kids[] <- user()
+  proportion_crowded[] <- user()
   
   # DEFINE INITIAL STATE
   initial(Sc[]) <- init_Sc[i]
@@ -174,8 +175,8 @@ sir <- odin::odin({
   dim(init_Ia) <- n_locations
   dim(init_Ra) <- n_locations
   dim(infection_draws) <- n_locations
-  dim(avg_house) <- n_locations
-  dim(avg_age) <- n_locations
+  dim(proportion_crowded) <- n_locations
+  dim(proportion_w_kids) <- n_locations
   
   # dim(x) <- n_locations  # added to help with debugging
   
@@ -191,16 +192,17 @@ beta_d <- 0.77*(1/3.5)  # adjusted for half weeks --> days
 beta_ds <- 0
 school <- 0
 mu <- 0.23  # likely don't have to adjust for days/half weeks
+nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
 ro <- 96
 beta_c <- 0.2  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
-beta_a <- 0.2  # ******  maybe revisit this value ***********
+beta_a <- 0.1  # ******  maybe revisit this value ***********
 gamma <- 0.125  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
                     # ~8 days until recovery
-xi <- 0.05  # coefficient for average household size **** revisit this value after parameter fitting ****
-eta <- 0.05  # coefficient for average household age **** revisit this value after parameter fitting ****
+xi <- 0.92  # coefficient for proportion crowded **** revisit this value after parameter fitting ****
+eta <- 0.25  # coefficient for proportion with kids **** revisit this value after parameter fitting ****
 
 seed <- 0.01  # proportion infected to add at first infection step
 
@@ -218,8 +220,8 @@ distances_vec <- c(0, 5, 10, 80,
                    10, 200, 0, 1500,
                    80, 7, 1500, 0)*1
 distances <- matrix(data = distances_vec, nr = 4, nc = 4)
-avg_age <- c(0.3,0.5,0.7,0.9)
-avg_house <- c(0.3,0.5,0.7,0.9)
+proportion_w_kids <- c(0.3,0.5,0.7,0.9)
+proportion_crowded <- c(0.3,0.5,0.7,0.9)
 n_locations <- 4
 
 init_Sc <- c(1, 1, .99, 1)
@@ -235,6 +237,26 @@ init_Ra <- c(0, 0, 0, 0)
 # read in data
 coords <- as.matrix(read_csv("data/coords.csv", col_names = FALSE))
 populations <- read_csv("data/pops09.csv", col_names = FALSE)$X1
+demographic_data <- read_csv("data/migrants_merger.csv")
+
+clean_demo_data <- demographic_data %>%
+  mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
+  select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
+  filter(FY == 2017) %>%
+  # strip commas from Value column
+  mutate(Value = str_replace(Value, ",", "")) %>%
+  # sum together values for two types of non-migrants
+  group_by(State, FY, Category) %>%
+  summarize(Value = sum(as.numeric(Value)), 
+            proportion_crowded = median(as.numeric(proportion_crowded)), 
+            proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
+  # take weighted mean for migrant and non migrant demographic variables
+  group_by(State) %>%
+  summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
+            proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+
+
+
 
 avg_pop <- mean(populations)
 normalized_populations <- populations/avg_pop
@@ -262,8 +284,8 @@ for (j in sites_to_seed){
 }
 
 # made up household/age data
-avg_house <- runif(834, min=0, max=1)
-avg_age <- runif(834, min=0, max=1)
+proportion_crowded <- runif(834, min=0, max=1)
+proportion_w_kids <- runif(834, min=0, max=1)
 
 
 # RUN MODEL -------------------------------------
@@ -289,8 +311,8 @@ model <- sir$new(beta_not=beta_not,
                  init_Ra=init_Ra,
                  N=normalized_populations,
                  dij=distances,
-                 avg_house=avg_house,
-                 avg_age=avg_age,
+                 proportion_crowded=clean_demo_data$proportion_crowded,
+                 proportion_w_kids=clean_demo_data$proportion_w_kids,
                  seed=seed)
 
 sol <- model$run(t)
