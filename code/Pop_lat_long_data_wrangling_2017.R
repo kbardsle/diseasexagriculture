@@ -7,6 +7,12 @@
 library(tidyverse)
 library(zipcodeR)
 
+# get path to the script directory
+script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+
+# Set the working directory to the parent directory of the script directory
+setwd(file.path(script_dir, ".."))
+
 # read in data and reformat
 latlong_zip <-read.table('data/2017_Gaz_zcta_national.txt',
                          sep='\t',
