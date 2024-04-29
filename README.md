@@ -1,2 +1,10 @@
 # diseasexagriculture
 Repository for IQ Bio group rotation.
+
+## Project Abstract
+
+**Assessing the impact of an emerging respiratory pathogen on US agricultural workers and food production** 
+
+Agriculture is a critical component of the US economy, contributing over 200 billion dollars annually to GDP. Many crops rely heavily on manual labor, but the impact of disruptions to the agricultural workforce on agricultural productivity is not well understood. Here we study the effects of the outbreak of a novel respiratory pathogen on the US agricultural workforce and its cascading impacts on agricultural output and economic production. We investigate how demographic variables, including household crowding and age structure, of the agricultural workforce impact disease transmission by combining a spatially and temporally explicit disease model with two separate SIR (susceptible-infectious-recovered) compartmental models of disease dynamics. This multi-layer approach makes it possible to model the patterns of disease transmission across the United States as well as within-community transmission for both the general population and the agricultural workforce at the state scale. Our model is parameterized using data from the 2017 US Census and National Agricultural Workers Survey (NAWS) from the same year. This model can be used to explore the effects of a novel disease outbreak on the US agricultural workforce and the economic impacts of the resulting agricultural productivity losses. By studying disruptions to this workforce, policies can be designed for both cost-effective and targeted disease surveillance strategies, as well as public health interventions specifically tailored to vulnerabilities and disease spread for this population. Additionally, this model will guide economic policy surrounding expected changes in food supply and the impacts on GDP.
+
+[This work was supported in part by the Interdisciplinary Quantitative Biology (IQ Biology) program at the BioFrontiers Institute, University of Colorado, Boulder.]
