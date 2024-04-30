@@ -332,17 +332,6 @@ data.frame(ind=ind$infection_start_index, pop=populations) %>%
 pops_50 <- sample(unique(data_reformat$Population), 50)
 pops_4 <- sample(unique(data_reformat$Population), 4)
 
-# figure with subsample of 50 pops with different colors for each population
-data_reformat %>% filter(Population %in% pops_50) %>% 
-ggplot() + 
-  geom_line(aes(x=step, y=S, color=Population, linetype=Community)) + 
-  geom_line(aes(x=step, y=I, color=Population, linetype=Community)) + 
-  geom_line(aes(x=step, y=R, color=Population, linetype=Community)) + 
-  theme_bw() + guides(color=FALSE)
-
-# ggplot(data=fig_sir, mapping=aes(x = step, y = n, col = population)) +
-  # geom_line() #+ theme(legend.position = "none")
-
 # figure with facets for populations
 fig_data %>% filter(Population %in% pops_4) %>% 
   ggplot(aes(x = step, y = n, col = Disease_Status, linetype=Community)) +
