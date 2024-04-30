@@ -5,16 +5,23 @@
 # --------------------------------------------------------
 
 library(tidyverse)
+library(zipcodeR)
+
+# get path to the script directory
+script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+
+# Set the working directory to the parent directory of the script directory
+setwd(file.path(script_dir, ".."))
 
 # read in data and reformat
 latlong_zip <-read.table('data/2017_Gaz_zcta_national.txt',
-                sep='\t',
-                header=TRUE,
-                colClasses = "character")
-      # data from: 
-      # https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.2017.html#list-tab-264479560
-      # see here for more information on column contents (very bottom of page): 
-      # https://www.census.gov/programs-surveys/geography/technical-documentation/records-layout/gaz-record-layouts.2017.html#list-tab-1913338080
+                         sep='\t',
+                         header=TRUE,
+                         colClasses = "character")
+# data from: 
+# https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.2017.html#list-tab-264479560
+# see here for more information on column contents (very bottom of page): 
+# https://www.census.gov/programs-surveys/geography/technical-documentation/records-layout/gaz-record-layouts.2017.html#list-tab-1913338080
 
 pop_zip <- read_csv("data/ACSDP5Y2017.DP05-Data.csv")
 
@@ -59,51 +66,51 @@ df_3digit_filtered <- df_3digit %>% filter(POP3 >= 20000)
 # filter for contiguous US
 df_US <- df_3digit_filtered %>% filter(WEIGHTED_LONG > -126 & WEIGHTED_LONG < -65) %>% filter(WEIGHTED_LAT > 23 & WEIGHTED_LAT < 50)
 
-# add column for state
-get_state <- function(latitude, longitude) {
-  states <- map("state", fill = TRUE, plot = FALSE)
-  point <- data.frame(longitude = longitude, latitude = latitude)
-  state <- point_in_poly(point, states)
-  return(state$names)
-}
+# input state info
+state_df <- read_csv("data/state_abbrev.csv") %>% filter(Contig == "Y")
 
+zips_list <- lapply(state_df$Abbreviation, search_state)
+zips_df <- bind_rows(zips_list)
+zips_df <- zips_df %>% select(c("zipcode","state"))
 
-# Load required package
-library(maps)
+zips_df <- zips_df %>%
+  dplyr::mutate(ZIP3 = substr(as.character(zipcode), 1, 3)) %>% 
+  select(c("state","ZIP3")) %>% distinct()
 
-# Install and load the zipcode package
-install.packages("zipcode")
-library(zipcode)
-
-# Function to get state information from 3-digit ZIP codes
-get_state_from_zip <- function(zip_codes) {
-  # Load ZIP code dataset
-  data(zipcode)
-  
-  # Extract state information
-  states <- sapply(zip_codes, function(zip) {
-    zip_info <- subset(zipcode, zip == substr(zipcode$zip, 1, 3))
-    if (nrow(zip_info) > 0) {
-      return(unique(zip_info$state)[1])
-    } else {
-      return(NA)
-    }
-  })
-  
-  return(states)
-}
-
-# Example 3-digit ZIP codes
-zip_codes <- c("100", "902", "606")
-
-# Get state information
-state_info <- get_state_from_zip(zip_codes)
-
-# Print state information
-print(state_info)
-
-
-
+# bind state info with pop/lat long info
+df_US_states <- full_join(df_US, zips_df, by="ZIP3") %>% filter(!is.na(POP3))
 
 # save as csv
-write.csv(df_US, "data/2017_pop_lat_long_data.csv", row.names=FALSE)
+# write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
+df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
+
+# combine with demographic data for ag workers
+demographic_data <- read_csv("data/migrants_merger.csv")
+
+clean_demo_data <- demographic_data %>%
+  mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
+  select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
+  filter(FY == 2017) %>%
+  # strip commas from Value column
+  mutate(Value = str_replace(Value, ",", "")) %>%
+  # sum together values for two types of non-migrants
+  group_by(State, FY, Category) %>%
+  summarize(Value = sum(as.numeric(Value)), 
+            proportion_crowded = median(as.numeric(proportion_crowded)), 
+            proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
+  # take weighted mean for migrant and non migrant demographic variables
+  group_by(State) %>%
+  summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
+            proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+
+# add state names
+colnames(state_df)[2] <- "State_Abbreviation"
+colnames(df_US_states)[5] <- "State_Abbreviation"
+df_US_states_names <- full_join(df_US_states, state_df, by="State_Abbreviation")
+df_US_states_names$State <- toupper(df_US_states_names$State)
+
+# do join with demographic data
+data_complete_ag <- full_join(df_US_states_names, clean_demo_data, by="State")
+
+# save as csv
+write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
