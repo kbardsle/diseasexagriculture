@@ -14,23 +14,7 @@ script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(file.path(script_dir, ".."))
 
 # read in data
-demographic_data <- read_csv("data/migrants_merger.csv")
-
-clean_demo_data <- demographic_data %>%
-  mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
-  select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
-  filter(FY == 2017) %>%
-  # strip commas from Value column
-  mutate(Value = str_replace(Value, ",", "")) %>%
-  # sum together values for two types of non-migrants
-  group_by(State, FY, Category) %>%
-  summarize(Value = sum(as.numeric(Value)), 
-            proportion_crowded = median(as.numeric(proportion_crowded)), 
-            proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
-  # take weighted mean for migrant and non migrant demographic variables
-  group_by(State) %>%
-  summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
-            proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+data_2017 <- read_csv("data/2017_pop_demo_data_agricultural.csv")
 
 # define functions
 
@@ -47,4 +31,9 @@ calc_R0 <- function(prop_crowding, prop_kids, Ba, xi, eta, gamma){
 }
 ###################################
 
-clean_demo_data$R0 <- calc_R0()
+data_2017$R0 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.1, 0.92, 0.25, 0.125)
+
+summary(data_2017$R0)
+weighted.mean(data_2017$R0, data_2017$POP3)
+
+ggplot(data=data_2017, mapping=aes(x=R0)) + geom_histogram(bins=50) + theme_bw()
