@@ -1,9 +1,6 @@
-# --------------------------------------------------------
-# calculating 3-digit zip population sizes and weighted latitude longitudes for 2017 census data
-# 26 Apr 2024
-# Katie Bardsley
-# --------------------------------------------------------
+# data prep for use in disease model
 
+# load packages
 library(tidyverse)
 library(zipcodeR)
 
@@ -12,6 +9,8 @@ script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 
 # Set the working directory to the parent directory of the script directory
 setwd(file.path(script_dir, ".."))
+
+# calculating 3-digit zip population sizes for 2017 census data -------------------------------------
 
 # read in data and reformat
 latlong_zip <-read.table('data/2017_Gaz_zcta_national.txt',
@@ -36,7 +35,6 @@ zipdata_full$INTPTLAT <- as.numeric(zipdata_full$INTPTLAT)
 zipdata_full$INTPTLONG <- as.numeric(zipdata_full$INTPTLONG)
 zipdata_full$POPULATION <- as.numeric(zipdata_full$POPULATION)
 
-
 # add column for 3 digit zip
 zipdata_full <- zipdata_full %>%
   dplyr::mutate(ZIP3 = substr(as.character(GEOID), 1, 3))
@@ -49,6 +47,8 @@ zipdata_full3 <- full_join(zipdata_full, zip3_pops, by="ZIP3")
 
 # filter out zips with less than 20,000 people
 zipdata3_filtered <- zipdata_full3 %>% filter(POP3 >= 20000)
+
+# calculating 3-digit zip code population weighted lat long -------------------------------------
 
 # calculate population-weighted lat/long
 weighted_latlong <- zipdata3_filtered %>% 
@@ -65,6 +65,8 @@ df_3digit_filtered <- df_3digit %>% filter(POP3 >= 20000)
 
 # filter for contiguous US
 df_US <- df_3digit_filtered %>% filter(WEIGHTED_LONG > -126 & WEIGHTED_LONG < -65) %>% filter(WEIGHTED_LAT > 23 & WEIGHTED_LAT < 50)
+
+# adding state information to 3-digit zip dataset -------------------------------------
 
 # input state info
 state_df <- read_csv("data/state_abbrev.csv") %>% filter(Contig == "Y")
@@ -83,6 +85,10 @@ df_US_states <- full_join(df_US, zips_df, by="ZIP3") %>% filter(!is.na(POP3))
 # save as csv
 # write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
 df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
+
+# combine with agricultural worker demographic data -------------------------------------
+
+# demographic data from: https://github.com/naiacasina/migrants_R_proj
 
 # combine with demographic data for ag workers
 demographic_data <- read_csv("data/migrants_merger.csv")
