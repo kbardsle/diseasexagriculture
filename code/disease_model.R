@@ -382,7 +382,7 @@ one_check$a_one
 fig_data %>% group_by(Population, Disease_Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
 
 # checking first time step for location infection
-ind <- do.call(rbind, lapply(836:1669, function(i){
+ind <- do.call(rbind, lapply(836:1703, function(i){
   data.frame(population = i-835, infection_start_index = min(which(sol_to_plot[,i] != 0)))
 }))
 
@@ -429,8 +429,8 @@ fig_data %>%
 # map plot
 infection_data <- data.frame(coords, ind$infection_start_index)
 
-infection_data <- infection_data %>% rename(latitude = X2,
-       longitude = X1,
+infection_data <- infection_data %>% rename(latitude = WEIGHTED_LAT,
+       longitude = WEIGHTED_LONG,
        infection_start_index = ind.infection_start_index)
 
 us_map <- map_data("state")
