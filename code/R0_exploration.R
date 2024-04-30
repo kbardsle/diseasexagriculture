@@ -31,9 +31,16 @@ calc_R0 <- function(prop_crowding, prop_kids, Ba, xi, eta, gamma){
 }
 ###################################
 
-data_2017$R0 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.1, 0.92, 0.25, 0.125)
+data_2017$R0_0.05 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.35, 0.47, 0.125)
+data_2017$R0_0.1 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.1, 0.92, 0.25, 0.125)
+data_2017$R0_0.15 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.84, 0.09, 0.125)
+data_2017$R0_0.16 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.91, 0.05, 0.125)
+data_2017$R0_0.165 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.62, 0.06, 0.125)
+data_2017$R0_0.17 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.33, 0.07, 0.125)
+data_2017$R0_0.175 <- calc_R0(data_2017$proportion_crowded, data_2017$proportion_w_kids, 0.15, 0.04, 0.08, 0.125)
 
-summary(data_2017$R0)
+
+summary(data_2017)
 weighted.mean(data_2017$R0, data_2017$POP3)
 
 ggplot(data=data_2017, mapping=aes(x=R0)) + geom_histogram(bins=50) + theme_bw()
