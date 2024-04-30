@@ -123,3 +123,22 @@ data_complete_ag <- data_complete_ag %>% filter(State_Abbreviation != "DC")
 
 # save as csv
 write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
+
+
+
+
+# figuring out which locations to seed
+
+# identifying location indexes for 4 sites from Stephen's paper
+# Grenada, MS - 389
+# Albany, GA - 398
+# Stockton, CA - 952
+# Omaha, NE - 681
+
+seed_zips <- c(389, 398, 952, 681)
+
+seed_site_df <- data_complete_ag %>% 
+  mutate(ID = seq.int(nrow(data_complete_ag))) %>% 
+  filter(ZIP3 %in% seed_zips)
+
+seed_indices <- seed_site_df$ID
