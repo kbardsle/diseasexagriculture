@@ -234,7 +234,11 @@ init_Sa <- rep(1,n_locations)
 init_Ia <- rep(0,n_locations)
 init_Ra <- rep(0,n_locations)
 
-sites_to_seed <- c(1)  #,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,100,200,300,400)
+sites_to_seed <- c(350, 359, 614, 835)
+# Grenada, MS - 350
+# Albany, GA - 359
+# Stockton, CA - 614
+# Omaha, NE - 835
 
 for (j in sites_to_seed){
   init_Sc[j] <- 0.99
@@ -309,8 +313,8 @@ one_check$a_one
 fig_data %>% group_by(Population, Disease_Status) %>% summarize(min=min(n), max=max(n), mean=mean(n))
 
 # checking first time step for location infection
-ind <- do.call(rbind, lapply(836:1703, function(i){
-  data.frame(population = i-835, infection_start_index = min(which(sol_to_plot[,i] != 0)))
+ind <- do.call(rbind, lapply(870:1737, function(i){
+  data.frame(population = i-869, infection_start_index = min(which(sol_to_plot[,i] != 0)))
 }))
 
 summary(ind)
