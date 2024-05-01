@@ -246,7 +246,6 @@ for (j in sites_to_seed){
 }
 
 
-
 # RUN MODEL -------------------------------------
 
 model <- sir$new(beta_not=beta_not,
