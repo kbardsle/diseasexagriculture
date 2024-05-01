@@ -283,10 +283,6 @@ for (j in sites_to_seed){
   init_Ic[j] <- 0.01
 }
 
-# made up household/age data
-proportion_crowded <- runif(834, min=0, max=1)
-proportion_w_kids <- runif(834, min=0, max=1)
-
 
 # RUN MODEL -------------------------------------
 
