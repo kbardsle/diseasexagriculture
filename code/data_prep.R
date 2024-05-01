@@ -121,6 +121,10 @@ data_complete_ag <- full_join(df_US_states_names, clean_demo_data, by="State")
 # filter out washington dc
 data_complete_ag <- data_complete_ag %>% filter(State_Abbreviation != "DC")
 
+# add population ID
+data_complete_ag <- data_complete_ag %>% 
+  mutate(ID = seq.int(nrow(data_complete_ag)))
+
 # save as csv
 write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
 
@@ -138,7 +142,6 @@ write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.name
 seed_zips <- c(389, 398, 952, 681)
 
 seed_site_df <- data_complete_ag %>% 
-  mutate(ID = seq.int(nrow(data_complete_ag))) %>% 
   filter(ZIP3 %in% seed_zips)
 
 seed_indices <- seed_site_df$ID
