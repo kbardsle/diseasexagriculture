@@ -66,6 +66,8 @@ parameterize <- function(r_not, gamma, beta_not, vars){
   # calculate distance of each r not value from desired value (stress)
   stress <- abs(all_r_nots - r_not)
   
+  print(min(stress))
+  
   # return combination of coefficients with lowest stress
   best_coeffs <- list(all_combos[which.min(stress),])
 }

@@ -107,7 +107,8 @@ clean_demo_data <- demographic_data %>%
   # take weighted mean for migrant and non migrant demographic variables
   group_by(State) %>%
   summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
-            proportion_w_kids = weighted.mean(proportion_w_kids, Value))
+            proportion_w_kids = weighted.mean(proportion_w_kids, Value),
+            state_ag_population = sum(Value))
 
 # add state names
 colnames(state_df)[2] <- "State_Abbreviation"
