@@ -396,19 +396,39 @@ map_df <- data_2017 %>%
   group_by(State) %>% 
   summarize(crowded=mean(proportion_crowded),
             children=mean(proportion_w_kids),
-            state_ag_pop=mean(state_ag_population))
+            state_ag_pop=mean(state_ag_population),
+            ag_prop=(median(state_ag_population)/sum(POP3)))
 map_df$State <- tolower(map_df$State)
 colnames(map_df)[1] <- "region"
 
-full_map_df <- full_join(us_map, map_df)
+full_map_df <- full_join(us_map, map_df, by="region")
 
 map_crowding <- ggplot() + 
-  # geom_polygon(data = us_map, 
-  #              aes(x = long, y = lat, group = group), 
-  #              fill = "white") +
+  geom_polygon(data = full_map_df,
+               aes(x = long, y = lat, group = group, fill = crowded)) +
   geom_polygon(data = map_data("state"), 
                aes(x = long, y = lat, group = group), 
-               color = "black", fill = NA)
+               color = "black", fill = NA) +
+  scale_fill_viridis() + 
+  theme_minimal()
+
+map_children <- ggplot() + 
+  geom_polygon(data = full_map_df,
+               aes(x = long, y = lat, group = group, fill = children)) +
+  geom_polygon(data = map_data("state"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", fill = NA) +
+  scale_fill_viridis() + 
+  theme_minimal()
+
+map_ag_workers <- ggplot() + 
+  geom_polygon(data = full_map_df,
+               aes(x = long, y = lat, group = group, fill = ag_prop)) +
+  geom_polygon(data = map_data("state"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", fill = NA) +
+  scale_fill_viridis() + 
+  theme_minimal()
 
 
 # SIR plot 
