@@ -302,7 +302,6 @@ infection_data <- data.frame(ind$population, coords, ind$infection_start_index) 
          population = ind.population)
 write.csv(infection_data, "data/infection_start_data.csv")
 
-
 # add combined dataframe with state information
 data_2017_temp <- data_2017
 colnames(data_2017_temp)[11] <- "Population"
@@ -320,7 +319,7 @@ state_output_df <- output_state_info_df %>% group_by(step, Disease_Status, Commu
 
 write.csv(state_output_df, "data/model_output_grouped_by_state.csv")
 
-
+  
 # TESTS -------------------------------------
 
 # check if values add to 1
@@ -353,12 +352,3 @@ data.frame(ind=ind$infection_start_index, dist=spring_dist) %>%
 # population size 
 data.frame(ind=ind$infection_start_index, pop=populations) %>% 
   ggplot(mapping=aes(x=pop, y=ind)) + geom_point()
-
-
-
-
-
-
-
-
-
