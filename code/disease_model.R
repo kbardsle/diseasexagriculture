@@ -410,7 +410,8 @@ map_crowding <- ggplot() +
                aes(x = long, y = lat, group = group), 
                color = "black", fill = NA) +
   scale_fill_viridis() + 
-  theme_minimal()
+  theme_minimal() + 
+  labs(fill="Proportion", title="Proportion of households with more than one resident per room")
 
 map_children <- ggplot() + 
   geom_polygon(data = full_map_df,
@@ -419,7 +420,8 @@ map_children <- ggplot() +
                aes(x = long, y = lat, group = group), 
                color = "black", fill = NA) +
   scale_fill_viridis() + 
-  theme_minimal()
+  theme_minimal() + 
+  labs(fill="Proportion", title="Proportion of households with children")
 
 map_ag_workers <- ggplot() + 
   geom_polygon(data = full_map_df,
@@ -428,7 +430,8 @@ map_ag_workers <- ggplot() +
                aes(x = long, y = lat, group = group), 
                color = "black", fill = NA) +
   scale_fill_viridis() + 
-  theme_minimal()
+  theme_minimal() +
+  labs(fill="Proportion", title="Proportion of state population that are agricultural workers")
 
 
 # SIR plot 
