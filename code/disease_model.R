@@ -291,23 +291,6 @@ fig_data <- sol_to_plot %>%
 # make reformatted dataframe with separate columns for S, I, and R:
 data_reformat <- fig_data %>% pivot_wider(names_from = "Disease_Status", values_from = "n")
 
-# add combined dataframe with state information
-data_2017_temp <- data_2017
-colnames(data_2017_temp)[11] <- "Population"
-data_2017_temp$Population <- as.character(data_2017_temp$Population)
-
-output_state_info_df <- full_join(fig_data,data_2017_temp,by="Population")
-
-write.csv(output_state_info_df, "data/model_output_state_demographics.csv")
-
-# state level data
-state_output_df <- output_state_info_df %>% group_by(step, Disease_Status, Community, State, State_Abbreviation) %>% 
-  summarize(state_ag_pop=median(state_ag_population),
-            state_pop=sum(POP3),
-            n_state=weighted.mean(n, POP3))
-
-write.csv(state_output_df, "data/model_output_grouped_by_state.csv")
-
 
 # TESTS -------------------------------------
 
@@ -391,26 +374,6 @@ map
 # ggsave("infection_map_4.22.24.png", plot=map, width=8, height=5)
 
 
-# map for household crowding
-map_df <- data_2017 %>% 
-  group_by(State) %>% 
-  summarize(crowded=mean(proportion_crowded),
-            children=mean(proportion_w_kids),
-            state_ag_pop=mean(state_ag_population))
-map_df$State <- tolower(map_df$State)
-colnames(map_df)[1] <- "region"
-
-full_map_df <- full_join(us_map, map_df)
-
-map_crowding <- ggplot() + 
-  # geom_polygon(data = us_map, 
-  #              aes(x = long, y = lat, group = group), 
-  #              fill = "white") +
-  geom_polygon(data = map_data("state"), 
-               aes(x = long, y = lat, group = group), 
-               color = "black", fill = NA)
-
-
 # SIR plot 
 # make palettes
 reds_pal <- scales::hue_pal(h = c(0, 60))
@@ -420,16 +383,16 @@ scales::show_col(blues_pal(50))
 
 # blue for s, red for I, green for R
 SIR_no_legend <- data_reformat %>% filter(Population %in% pops_50) %>% ggplot() + 
-  # geom_line(aes(x=step, y=S, color=Population, linetype=Community)) +
+  geom_line(aes(x=step, y=S, color=Population, linetype=Community)) +
   #scale_color_stepsn(colors = c("#f5b0b0", "#400202")) +
   scale_color_manual(values = blues_pal(50)) +
   #scale_color_viridis(discrete = TRUE, option = "viridis") +
   new_scale_color() +
   geom_line(aes(x=step, y=I, color=Population, linetype=Community)) +
-  # #scale_color_viridis(discrete = TRUE, option = "rocket") +
-  # scale_color_manual(values = reds_pal(50)) +
-  # new_scale_color() +
-  # geom_line(aes(x=step, y=R, color=Population, linetype=Community)) + 
+  #scale_color_viridis(discrete = TRUE, option = "rocket") +
+  scale_color_manual(values = reds_pal(50)) +
+  new_scale_color() +
+  geom_line(aes(x=step, y=R, color=Population, linetype=Community)) + 
   #scale_color_viridis(discrete = TRUE, option = "mako") +
   scale_color_manual(values = greens_pal(50)) +
   theme_bw() + 
@@ -450,8 +413,6 @@ legend_plot <- get_legend(fig_data %>%
   )
 
 plot_grid(SIR_no_legend, legend_plot, rel_widths = c(0.8, 0.2))
-
-
 
 
 
