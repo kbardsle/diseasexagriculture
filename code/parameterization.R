@@ -88,4 +88,4 @@ coefficient_vals <- parameterize(r_not = 1.6,
                                  beta_not = 0.1,
                                  vars = demographic_vars)
 
-
+coefficient_vals

@@ -83,8 +83,8 @@ zips_df <- zips_df %>%
 df_US_states <- full_join(df_US, zips_df, by="ZIP3") %>% filter(!is.na(POP3))
 
 # save as csv
-# write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
-df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
+write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
+# df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
 
 # combine with agricultural worker demographic data -------------------------------------
 
@@ -126,7 +126,7 @@ data_complete_ag <- data_complete_ag %>% filter(State_Abbreviation != "DC")
 data_complete_ag <- data_complete_ag %>% 
   mutate(ID = seq.int(nrow(data_complete_ag)))
 
-# save as csv
+# save as csv - input for disease model
 write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
 
 
