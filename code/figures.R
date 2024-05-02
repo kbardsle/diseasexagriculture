@@ -5,7 +5,6 @@ fig_data <- read.csv(output_state_info_df, "data/model_output_state_demographics
 infection_data <- read.csv("data/infection_start_data.csv")
 
 
-
 # PLOTTING -------------------------------------
 
 pops_50 <- sample(unique(data_reformat$Population), 50)
@@ -21,7 +20,7 @@ output_state_info_df %>%
   ggplot(aes(x = step, y = n, col = Disease_Status, linetype=Community, group_by=Population)) +
   geom_line() + theme_bw()
 
- # map plot
+# map plot
 us_map <- map_data("state")
 
 map <- ggplot() +
@@ -45,7 +44,7 @@ map
 
 
 # map for household crowding
-map_df <- data_2017 %>% 
+map_df <- output_state_info_df %>%  #data_2017 %>% 
   group_by(State) %>% 
   summarize(crowded=mean(proportion_crowded),
             children=mean(proportion_w_kids),
@@ -64,7 +63,12 @@ map_crowding <- ggplot() +
                color = "black", fill = NA) +
   scale_fill_viridis() + 
   theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+                          plot.background = element_rect(fill = "white"),
+                          plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
   labs(fill="Proportion", title="Proportion of households with more than one resident per room")
+
+ggsave("crowding_map.png", plot=map_crowding, width=6, height=4)
 
 map_children <- ggplot() + 
   geom_polygon(data = full_map_df,
@@ -74,7 +78,12 @@ map_children <- ggplot() +
                color = "black", fill = NA) +
   scale_fill_viridis() + 
   theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
   labs(fill="Proportion", title="Proportion of households with children")
+
+ggsave("children_map.png", plot=map_children, width=6, height=4)
 
 map_ag_workers <- ggplot() + 
   geom_polygon(data = full_map_df,

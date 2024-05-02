@@ -25,10 +25,26 @@ gen_demographic_data_normalized <- gen_demographic_data %>%
   mutate(proportion_crowded = percent_crowded/100,
          proportion_w_kids = percent_with_children/100)
 
-ggplot(mapping=aes(x = proportion_crowded)) +
-  geom_histogram(data = ag_clean_demo_data, fill="red", alpha=0.5) +
-  geom_histogram(data = gen_demographic_data_normalized, fill="blue", alpha=0.5)
+hist_crowding <- ggplot() +
+  geom_histogram(data = ag_clean_demo_data, aes(x = proportion_crowded, fill = "Agricultural Workforce"), alpha=0.6) +
+  geom_histogram(data = gen_demographic_data_normalized, aes(x = proportion_crowded, fill = "General Population"), alpha=0.6) +
+  scale_fill_manual(values = c("#4fc375", "#4574ca"), name = "Community") +
+  labs(x = "proportion crowded") +
+  theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))
 
-ggplot(mapping=aes(x = proportion_w_kids)) +
-  geom_histogram(data = ag_clean_demo_data, fill="red", alpha=0.5) +
-  geom_histogram(data = gen_demographic_data_normalized, fill="blue", alpha=0.5)
+ggsave("figures/prop_crowded_hist.png", plot=hist_crowding, width=5, height=3)
+
+hist_children <- ggplot() +
+  geom_histogram(data = ag_clean_demo_data, aes(x = proportion_w_kids, fill = "Agricultural Workforce"), alpha=0.6) +
+  geom_histogram(data = gen_demographic_data_normalized, aes(x = proportion_w_kids, fill = "General Population"), alpha=0.6) +
+  scale_fill_manual(values = c("#4fc375", "#4574ca"), name = "Community") +
+  labs(x = "proportion with children") +
+  theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))
+
+ggsave("figures/prop_children_hist.png", plot=hist_children, width=5, height=3)
