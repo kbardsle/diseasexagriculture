@@ -288,9 +288,6 @@ sol_to_plot <- as_tibble(data.frame(model$run(t)))
 fig_data <- sol_to_plot %>% 
   pivot_longer(names_to='population', values_to="n", cols=-c("step"))  %>% separate(col="population", into=c("Status","Population")) %>% separate(col="Status", into=c("Disease_Status","Community"),sep=1:1)
 
-# make reformatted dataframe with separate columns for S, I, and R:
-data_reformat <- fig_data %>% pivot_wider(names_from = "Disease_Status", values_from = "n")
-
 # dataframe for infection start date
 ind <- do.call(rbind, lapply(870:1737, function(i){
   data.frame(population = i-869, infection_start_index = min(which(sol_to_plot[,i] != 0)))
@@ -319,7 +316,8 @@ state_output_df <- output_state_info_df %>% group_by(step, Disease_Status, Commu
 
 write.csv(state_output_df, "data/model_output_grouped_by_state.csv")
 
-  
+
+
 # TESTS -------------------------------------
 
 # check if values add to 1

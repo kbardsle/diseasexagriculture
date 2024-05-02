@@ -1,6 +1,6 @@
 ag_demographic_data <- read_csv("data/migrants_merger.csv")
 
-ag_clean_demo_data <- demographic_data %>%
+ag_clean_demo_data <- ag_demographic_data %>%
   mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
   select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
   filter(FY == 2017) %>%
