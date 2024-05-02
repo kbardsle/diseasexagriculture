@@ -9,7 +9,7 @@ Agriculture is a critical component of the US economy, contributing over 200 bil
 
 [This work was supported in part by the Interdisciplinary Quantitative Biology (IQ Biology) program at the BioFrontiers Institute, University of Colorado, Boulder.]
 
-# Repository contents
+## Repository contents
 
 This repo contains the following scripts, described in the order with which they should be used.
 
