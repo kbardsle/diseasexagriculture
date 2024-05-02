@@ -1,3 +1,6 @@
+# from: https://github.com/naiacasina/migrants_R_proj/blob/master/migrants_stats.R
+# written by Naia Ormaza Zulueta
+
 # In this script we:
 #   1. Compute distributions of variables across states for the NAWS survey
 #      using weights
