@@ -9,7 +9,7 @@ Agriculture is a critical component of the US economy, contributing over 200 bil
 
 [This work was supported in part by the Interdisciplinary Quantitative Biology (IQ Biology) program at the BioFrontiers Institute, University of Colorado, Boulder.]
 
-# Repository contents
+## Repository contents
 
 This repo contains the following scripts, described in the order with which they should be used.
 
@@ -28,6 +28,7 @@ Prepare data for input into the disease model.
 * **state_abbrev.csv** 
   * US states with their 2-letter abbreviations
 * **migrants_merger.csv** 
+  * demographic data for agricultural workforce
   * output from: [migrants_R_proj/migrants_stats.R at master · naiacasina/migrants_R_proj · GitHub](https://github.com/naiacasina/migrants_R_proj/blob/master/migrants_stats.R)
 
 #### Outputs:
@@ -47,7 +48,7 @@ Determine optimal values for the coefficients for demographic variables for inpu
 
 #### Inputs:
 
-* general_population_demographics.csv
+* **general_population_demographics.csv**
   * 2017 information on [household crowding](https://data.census.gov/table/ACSDP1Y2017.DP04?g=010XX00US$0400000) and [households with at least one child](https://data.census.gov/table/ACSST1Y2017.S1101?t=Families%20and%20Living%20Arrangements&g=010XX00US$0400000) from the US Census Bureau
 
 #### Outputs:
@@ -109,18 +110,21 @@ Plot disease model output and agricultural workforce data.
 * **model_output_state_demographics.csv**
   * SIR model data with corresponding state information
   * output from disease_model.R
+* **model_output_grouped_by_state.csv**
+  * SIR model data grouped by state for each timestep
+  * output from disease_model.R
+* **migrants_merger.csv**
+  * demographic data for agricultural workforce
+  * output from: [migrants_R_proj/migrants_stats.R at master · naiacasina/migrants_R_proj · GitHub](https://github.com/naiacasina/migrants_R_proj/blob/master/migrants_stats.R)
+* **general_population_demographics.csv**
+  * 2017 information on [household crowding](https://data.census.gov/table/ACSDP1Y2017.DP04?g=010XX00US$0400000) and [households with at least one child](https://data.census.gov/table/ACSST1Y2017.S1101?t=Families%20and%20Living%20Arrangements&g=010XX00US$0400000) from the US Census Bureau
 
 #### Outputs:
 
-
-
-
-
-### analysis.R
-
-#### Goal:
-
-#### Inputs:
-
-#### Outputs:
+* pngs for the following figures saved to a "figures" directory:
+  * map of spatial infection spread (infection_map.png)
+  * histograms of demographic data (prop_crowded_hist.png; prop_children_hist.png)
+  * maps of agricultural worker demographics (crowding_map.png; children_map.png; ag_workers_map.png)
+  * peak infectious by state, colored by region (peak_infection_state_bar.png)
+  * SIR plot of infectious by state, colored by region (infectious_by_state.png)
 
