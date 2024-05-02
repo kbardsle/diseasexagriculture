@@ -218,7 +218,7 @@ peak_infect_bar <- state_data_clean %>%
 ggsave("figures/peak_infection_state_bar.png", peak_infect_bar, width=14, height=7)
 
 
-# SIR PLOT BY STATE, COLORED BY REGION -------------------------------------
+# SIR PLOT BY STATE (INFECTIOUS ONLY), COLORED BY REGION -------------------------------------
 
 # plot infections curves
 
