@@ -57,7 +57,7 @@ sir <- odin::odin({
   update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*(1-proportion_w_kids[i]))*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
