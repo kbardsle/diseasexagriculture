@@ -241,7 +241,7 @@ SIR_I_state <- state_data_raw %>%
   scale_linetype_manual(labels = c("Agricultural Workers", "General Population"), values = c(1, 2)) +
   #scale_color_manual(values = reds_pal(50)) +
   theme_bw() + 
-  labs(y="Proportion Infected", x="Timestep") +
+  labs(y="Proportion Infected", x="Days") +
   theme(panel.grid = element_blank(),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 15),
