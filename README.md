@@ -128,3 +128,19 @@ Plot disease model output and agricultural workforce data.
   * peak infectious by state, colored by region (peak_infection_state_bar.png)
   * SIR plot of infectious by state, colored by region (infectious_by_state.png)
 
+### hours_lost_calcs.R
+
+#### Goal:
+
+Convert the proportion of population infected in a timestep to hours lost, then summarize that data at the state level.
+
+#### Input:
+
+* **model_output_grouped_by_state.csv**
+  * SIR model data grouped by state for each timestep
+  * output from disease_model.R
+
+#### Output:
+
+* **state_hours_lost.csv**
+  * csv with hours lost for each state and proportion of hours lost yearly by state
