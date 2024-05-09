@@ -14,6 +14,7 @@ output_state_info_df <- read.csv("data/model_output_state_demographics.csv")  # 
 state_data_raw <- read_csv("data/model_output_grouped_by_state.csv") # state level data
 ag_demographic_data <- read_csv("data/migrants_merger.csv")  # demographic data for agricultural workforce
 gen_demographic_data<- read_csv("data/general_population_demographics.csv")  # demographic data for general population
+hours_lost_data <- read_csv("data/state_lost_dollars.csv")
 
 
 # MAP STATES TO REGIONS -------------------------------------
@@ -251,9 +252,81 @@ SIR_I_state <- state_data_raw %>%
 ggsave("figures/infectious_by_state.png", SIR_I_state, width=10, height=5)
 
 
+# MONEY LOST BY STATE ----------------------------
 
+# get state abbreviations and regions
+state_info <- state_data_clean %>%
+  filter(Community == "c") %>%
+  ungroup() %>%
+  select(c(State, State_Abbreviation, Region))
 
+hours_lost_clean <- hours_lost_data %>%
+  mutate(state = str_to_title(state)) %>%
+  # join in state abbreviations and regions
+  left_join(state_info, by = c("state" = "State"))
 
+ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly_hrs_lost), y = prop_yearly_hrs_lost, fill = Region)) +
+  geom_col() +
+  # scale_fill_viridis(discrete=TRUE, option="inferno") + 
+  # scale_fill_manual(values = pal3) +
+  scale_fill_brewer(palette = "Dark2") +
+  #geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
+  labs(x = "State", y = "Proportion Yearly Lost Income") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 13),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16))
+
+# plot proportion income lost
+ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly_hrs_lost), y = prop_yearly_hrs_lost, fill = Region)) +
+  geom_col() +
+  # scale_fill_viridis(discrete=TRUE, option="inferno") + 
+  # scale_fill_manual(values = pal3) +
+  scale_fill_brewer(palette = "Dark2") +
+  #geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
+  labs(x = "State", y = "Proportion Yearly Lost Income") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 13),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16))
+
+# plot lost dollars
+ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollars), y = lost_dollars, fill = Region)) +
+  geom_col() +
+  # scale_fill_viridis(discrete=TRUE, option="inferno") + 
+  # scale_fill_manual(values = pal3) +
+  scale_fill_brewer(palette = "Dark2") +
+  #geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
+  labs(x = "State", y = "Lost Agricultural Income (USD)") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 13),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16))
+
+# plot total dollars
+ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -total_dollars), y = total_dollars, fill = Region)) +
+  geom_col() +
+  # scale_fill_viridis(discrete=TRUE, option="inferno") + 
+  # scale_fill_manual(values = pal3) +
+  scale_fill_brewer(palette = "Dark2") +
+  #geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
+  labs(x = "State", y = "Total Yearly Agricultural Income (USD)") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 13),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16))
 
 
 
