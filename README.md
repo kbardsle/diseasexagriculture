@@ -144,3 +144,26 @@ Convert the proportion of population infected in a timestep to hours lost, then 
 
 * **state_hours_lost.csv**
   * csv with hours lost for each state and proportion of hours lost yearly by state
+  
+  
+  
+  ### dollars_lost_python.py
+
+#### Goal:
+
+Python file (requires PANDAS install). Takes NASS Quickstats data for crop production and filters it then merges with state_hours_lost.csv to calculate dollars lost.
+
+#### Input:
+
+* **state_hours_lost.csv**
+  * csv with hours lost for each state and proportion of hours lost yearly by state
+  * from hours_lost_calcs.R
+  
+* **crop_production_dollars.csv
+  * From NASS Quickstats (https://quickstats.nass.usda.gov/results/D4D2854D-4C6C-38AC-A171-0738BF8135A3)
+  * Crop total data by state for 2017 
+
+#### Output:
+
+* **state_lost_dollars.csv
+  * calculated lost dollars by state merged with lost hours and dollar production
