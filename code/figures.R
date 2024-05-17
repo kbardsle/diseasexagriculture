@@ -3,6 +3,7 @@
 # load packages
 library(tidyverse)
 library(wesanderson)
+library(viridis)
 
 # set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -281,7 +282,7 @@ ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly
         legend.text = element_text(size = 16))
 
 # plot proportion income lost
-ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly_hrs_lost), y = prop_yearly_hrs_lost, fill = Region)) +
+prop_lost_income <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly_hrs_lost), y = prop_yearly_hrs_lost, fill = Region)) +
   geom_col() +
   # scale_fill_viridis(discrete=TRUE, option="inferno") + 
   # scale_fill_manual(values = pal3) +
@@ -296,8 +297,10 @@ ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -prop_yearly
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
+ggsave("figures/prop_lost_income_state.png", prop_lost_income, width=14, height=7)
+
 # plot lost dollars
-ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollars), y = lost_dollars, fill = Region)) +
+lost_dollars <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollars), y = lost_dollars, fill = Region)) +
   geom_col() +
   # scale_fill_viridis(discrete=TRUE, option="inferno") + 
   # scale_fill_manual(values = pal3) +
@@ -311,6 +314,8 @@ ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollar
         axis.text = element_text(size = 13),
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
+
+ggsave("figures/lost_dollars_state.png", lost_dollars, width=14, height=7)
 
 # plot total dollars
 ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -total_dollars), y = total_dollars, fill = Region)) +
@@ -327,6 +332,45 @@ ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -total_dolla
         axis.text = element_text(size = 13),
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
+
+# map of dollars lost by state
+
+map_dollars_df <- hours_lost_clean
+map_dollars_df$state <- tolower(map_dollars_df$state)
+colnames(map_dollars_df)[1] <- "region"
+map_dollars_df$log_lost_dollars <- log(map_dollars_df$lost_dollars)
+
+full_map_dollars_df <- full_join(us_map, map_dollars_df, by="region")
+
+map_dollars_log <- ggplot() + 
+  geom_polygon(data = full_map_dollars_df,
+               aes(x = long, y = lat, group = group, fill = log_lost_dollars)) +
+  geom_polygon(data = map_data("state"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", fill = NA) +
+  scale_fill_viridis() + 
+  theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
+  labs(fill="Log of lost agricultural income (USD)", title="Lost Agricultural Income by State")
+
+ggsave("figures/dollars_map_log.png", plot=map_dollars_log, width=8, height=4)
+
+map_dollars <- ggplot() + 
+  geom_polygon(data = full_map_dollars_df,
+               aes(x = long, y = lat, group = group, fill = lost_dollars)) +
+  geom_polygon(data = map_data("state"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", fill = NA) +
+  scale_fill_viridis() + 
+  theme_minimal() + 
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
+  labs(fill="Lost Agricultural Income (USD)", title="Lost Agricultural Income by State")
+
+ggsave("figures/dollars_map.png", plot=map_dollars, width=8, height=4)
 
 
 
