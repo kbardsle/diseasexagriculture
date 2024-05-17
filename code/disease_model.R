@@ -206,7 +206,7 @@ eta <- 0.25  # coefficient for proportion with kids - based on parameterization
 
 seed <- 0.01  # proportion infected to add at first infection step
 
-t <- seq(from=0, to=150, by=1)
+t <- seq(from=0, to=350, by=1)
 
 
 # INPUT DATA
