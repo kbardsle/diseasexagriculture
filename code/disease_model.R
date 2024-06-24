@@ -37,10 +37,11 @@ sir <- odin::odin({
     # if a location is still not infected, set value equal to previous time step
 
   # SUSCEPTIBLE:
-  update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
+  # update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
+    update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] else Sc[i]
 
   # INFECTED:
-  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + beta_c*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Ic[i] + beta_c*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
+  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Ic[i] + (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
   
   # RECOVERED:
   update(Rc[]) <- if (infected[i] > 0 && Ic[i] == 0) Rc[i] + gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Rc[i] + gamma*Ic[i] else Rc[i]
@@ -54,10 +55,10 @@ sir <- odin::odin({
         # use the calculated value as the new value
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + ((beta_c*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded[i]+eta*proportion_w_kids[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
@@ -137,8 +138,12 @@ sir <- odin::odin({
   assortment_prob <- user(0.5)
   
   # agricultural workforce community parameters
-  proportion_w_kids[] <- user()
-  proportion_crowded[] <- user()
+  proportion_w_kids_a[] <- user()
+  proportion_crowded_a[] <- user()
+  
+  # general community parameters
+  proportion_w_kids_c[] <- user()
+  proportion_crowded_c[] <- user()
   
   # DEFINE INITIAL STATE
   initial(Sc[]) <- init_Sc[i]
@@ -175,8 +180,10 @@ sir <- odin::odin({
   dim(init_Ia) <- n_locations
   dim(init_Ra) <- n_locations
   dim(infection_draws) <- n_locations
-  dim(proportion_crowded) <- n_locations
-  dim(proportion_w_kids) <- n_locations
+  dim(proportion_crowded_a) <- n_locations
+  dim(proportion_w_kids_a) <- n_locations
+  dim(proportion_crowded_c) <- n_locations
+  dim(proportion_w_kids_c) <- n_locations
   
   # dim(x) <- n_locations  # added to help with debugging
   
@@ -212,7 +219,7 @@ t <- seq(from=0, to=350, by=1)
 # INPUT DATA
 
 # use 2017 population and latitude/longitude data
-data_2017 <- read_csv("data/2017_pop_demo_data_agricultural.csv")
+data_2017 <- read_csv("data/2017_pop_demo_data_both_communities.csv")
 coords <- as.matrix(data_2017 %>% select(c("WEIGHTED_LONG","WEIGHTED_LAT")))
 populations <- data_2017$POP3
 
@@ -269,8 +276,10 @@ model <- sir$new(beta_not=beta_not,
                  init_Ra=init_Ra,
                  N=normalized_populations,
                  dij=distances,
-                 proportion_crowded=data_2017$proportion_crowded,
-                 proportion_w_kids=data_2017$proportion_w_kids,
+                 proportion_crowded_a=data_2017$proportion_crowded_a,
+                 proportion_w_kids_a=data_2017$proportion_w_kids_a,
+                 proportion_crowded_c=data_2017$proportion_crowded_c,
+                 proportion_w_kids_c=data_2017$proportion_w_kids_c,
                  seed=seed)
 
 # sol <- model$run(t)
@@ -297,16 +306,21 @@ infection_data <- data.frame(ind$population, coords, ind$infection_start_index) 
          longitude = WEIGHTED_LONG,
          infection_start_index = ind.infection_start_index,
          population = ind.population)
-write.csv(infection_data, "data/infection_start_data.csv")
+
+# save
+out_name_infection_data <- paste0("data/infection_start_data_", format(Sys.Date(), "%m.%d.%y"), ".csv")
+write.csv(infection_data, out_name_infection_data)
 
 # add combined dataframe with state information
 data_2017_temp <- data_2017
-colnames(data_2017_temp)[11] <- "Population"
+colnames(data_2017_temp)[13] <- "Population"
 data_2017_temp$Population <- as.character(data_2017_temp$Population)
 
 output_state_info_df <- full_join(fig_data, data_2017_temp, by="Population")
 
-write.csv(output_state_info_df, "data/model_output_state_demographics.csv")
+# save
+out_name_state_info <- paste0("data/model_output_state_demographics_", format(Sys.Date(), "%m.%d.%y"), ".csv")
+write.csv(output_state_info_df, out_name_state_info)
 
 # state level data
 state_output_df <- output_state_info_df %>% group_by(step, Disease_Status, Community, State, State_Abbreviation) %>% 
@@ -314,7 +328,9 @@ state_output_df <- output_state_info_df %>% group_by(step, Disease_Status, Commu
             state_pop=sum(POP3),
             n_state=weighted.mean(n, POP3))
 
-write.csv(state_output_df, "data/model_output_grouped_by_state.csv")
+# save
+out_name_state_output <- paste0("data/model_output_grouped_by_state_", format(Sys.Date(), "%m.%d.%y"), ".csv")
+write.csv(state_output_df, out_name_state_output)
 
 
 

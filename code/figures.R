@@ -4,17 +4,56 @@
 library(tidyverse)
 library(wesanderson)
 library(viridis)
+library(stringer)
 
 # set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("../")
 
+###################################
+# FUNCTION: get_recent_file
+# description: read in file with the most recent date
+# inputs: base file name
+# outputs: dataframe
+# ---------------------------------
+get_recent_file <- function(base_filename){
+
+  # Get the list of files in the directory
+  file_list <- list.files("data/", pattern = paste0(base_filename, "_\\d{2}\\.\\d{2}\\.\\d{2}\\.csv"))
+  
+  # Extract dates from filenames
+  dates <- str_extract(file_list, "\\d{2}\\.\\d{2}\\.\\d{2}")
+  
+  # Convert extracted dates to Date objects
+  dates <- as.Date(dates, format = "%m.%d.%y")
+  
+  # Find the most recent date
+  latest_date <- max(dates)
+  
+  # Format the latest date back to string
+  latest_date_str <- format(latest_date, "%m.%d.%y")
+  
+  # Create the filename with the latest date
+  latest_file <- paste0("data/",base_filename, "_", latest_date_str, ".csv")
+  
+  # Read the CSV file with the latest date
+  df <- read.csv(latest_file)
+  
+  return(df)
+}
+
+###################################
+
 # read in data (alternatively, get from disease model output directly)
-infection_data <- read.csv("data/infection_start_data.csv")  # infection start timepoints
-output_state_info_df <- read.csv("data/model_output_state_demographics.csv")  # also works where calls for fig_data or data_2017
-state_data_raw <- read_csv("data/model_output_grouped_by_state.csv") # state level data
-ag_demographic_data <- read_csv("data/migrants_merger.csv")  # demographic data for agricultural workforce
-gen_demographic_data<- read_csv("data/general_population_demographics.csv")  # demographic data for general population
+# infection_data <- read.csv("data/infection_start_data.csv")  # infection start timepoints
+infection_data <- get_recent_file("infection_start_data")  # infection start timepoints
+# output_state_info_df <- read.csv("data/model_output_state_demographics.csv")  # also works where calls for fig_data or data_2017
+output_state_info_df <- get_recent_file("model_output_state_demographics")  # also works where calls for fig_data or data_2017
+# state_data_raw <- read_csv("data/model_output_grouped_by_state.csv") # state level data
+state_data_raw <- get_recent_file("model_output_grouped_by_state") # state level data
+demo_data <- read_csv("data/2017_pop_demo_data_both_communities.csv")
+# ag_demographic_data <- read_csv("data/migrants_merger.csv")  # demographic data for agricultural workforce
+# gen_demographic_data<- read_csv("data/general_population_demographics.csv")  # demographic data for general population
 hours_lost_data <- read_csv("data/state_lost_dollars.csv")
 
 
@@ -77,7 +116,9 @@ map <- ggplot() +
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))  # Set plot margins to ensure white background around the plot
 map
 
-ggsave("figures/infection_map.png", plot=map, width=8, height=5)
+paste0("figures/infection_map_", format(Sys.Date(), "%m.%d.%y"), ".png")
+ggsave(paste0("figures/infection_map_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=map, width=8, height=5)
 
 
 # DEMOGRAPHIC DATA HISTOGRAMS -------------------------------------
@@ -217,7 +258,7 @@ peak_infect_bar <- state_data_clean %>%
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
-ggsave("figures/peak_infection_state_bar.png", peak_infect_bar, width=14, height=7)
+ggsave("figures/peak_infection_state_bar_06.23.34.png", peak_infect_bar, width=14, height=7)
 
 
 # SIR PLOT BY STATE (INFECTIOUS ONLY), COLORED BY REGION -------------------------------------
@@ -250,7 +291,7 @@ SIR_I_state <- state_data_raw %>%
         legend.title = element_text(size = 20),
         legend.text = element_text(size = 15))
 
-ggsave("figures/infectious_by_state.png", SIR_I_state, width=10, height=5)
+ggsave("figures/infectious_by_state_06.23.24.png", SIR_I_state, width=10, height=5)
 
 
 # MONEY LOST BY STATE ----------------------------
@@ -297,7 +338,7 @@ prop_lost_income <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbrev
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
-ggsave("figures/prop_lost_income_state.png", prop_lost_income, width=14, height=7)
+ggsave("figures/prop_lost_income_state_06.23.24.png", prop_lost_income, width=14, height=7)
 
 # plot lost dollars
 lost_dollars <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollars), y = lost_dollars, fill = Region)) +
