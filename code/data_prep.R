@@ -86,29 +86,43 @@ df_US_states <- full_join(df_US, zips_df, by="ZIP3") %>% filter(!is.na(POP3))
 write.csv(df_US_states, "data/2017_pop_lat_long_data_states.csv", row.names=FALSE)
 # df_US_states <- read.csv("data/2017_pop_lat_long_data_states.csv")
 
-# combine with agricultural worker demographic data -------------------------------------
+# combine with demographic data -------------------------------------
 
 # demographic data from: https://github.com/naiacasina/migrants_R_proj
 
 # combine with demographic data for ag workers
 demographic_data <- read_csv("data/migrants_merger.csv")
 
-clean_demo_data <- demographic_data %>%
-  mutate(proportion_crowded = CROWDED1.1, proportion_w_kids = (1-HHKID.0)) %>%
-  select(c(State, FY, Category, Value, proportion_crowded, proportion_w_kids)) %>%
+clean_ag_demo_data <- demographic_data %>%
+  mutate(proportion_crowded_a = CROWDED1.1, proportion_w_kids_a = (1-HHKID.0)) %>%
+  select(c(State, FY, Category, Value, proportion_crowded_a, proportion_w_kids_a)) %>%
   filter(FY == 2017) %>%
   # strip commas from Value column
   mutate(Value = str_replace(Value, ",", "")) %>%
   # sum together values for two types of non-migrants
   group_by(State, FY, Category) %>%
   summarize(Value = sum(as.numeric(Value)), 
-            proportion_crowded = median(as.numeric(proportion_crowded)), 
-            proportion_w_kids = median(as.numeric(proportion_w_kids))) %>%
+            proportion_crowded_a = median(as.numeric(proportion_crowded_a)), 
+            proportion_w_kids_a = median(as.numeric(proportion_w_kids_a))) %>%
   # take weighted mean for migrant and non migrant demographic variables
   group_by(State) %>%
-  summarize(proportion_crowded = weighted.mean(proportion_crowded, Value),
-            proportion_w_kids = weighted.mean(proportion_w_kids, Value),
+  summarize(proportion_crowded_a = weighted.mean(proportion_crowded_a, Value),
+            proportion_w_kids_a = weighted.mean(proportion_w_kids_a, Value),
             state_ag_population = sum(Value))
+
+# combine with demographic data for general community
+
+# read in community demographic data
+gen_demographic_data_raw <- read_csv("data/general_population_demographics.csv")
+
+# normalize demographic data
+gen_demographic_data_normalized <- gen_demographic_data_raw %>%
+  mutate(proportion_crowded_c = percent_crowded/100,
+         proportion_w_kids_c = percent_with_children/100)
+
+# change state names to all uppercase
+gen_demographic_data_normalized$State <- toupper(gen_demographic_data_normalized$state)
+gen_demo <- gen_demographic_data_normalized %>% select(c(State, proportion_crowded_c, proportion_w_kids_c))
 
 # add state names
 colnames(state_df)[2] <- "State_Abbreviation"
@@ -117,17 +131,18 @@ df_US_states_names <- full_join(df_US_states, state_df, by="State_Abbreviation")
 df_US_states_names$State <- toupper(df_US_states_names$State)
 
 # do join with demographic data
-data_complete_ag <- full_join(df_US_states_names, clean_demo_data, by="State")
+data_complete_ag <- full_join(df_US_states_names, clean_ag_demo_data, by="State")
+full_2_communities <- full_join(data_complete_ag, gen_demo, by="State")
 
 # filter out washington dc
-data_complete_ag <- data_complete_ag %>% filter(State_Abbreviation != "DC")
+full_2_communities <- full_2_communities %>% filter(State_Abbreviation != "DC")
 
 # add population ID
-data_complete_ag <- data_complete_ag %>% 
-  mutate(ID = seq.int(nrow(data_complete_ag)))
+full_2_communities <- full_2_communities %>% 
+  mutate(ID = seq.int(nrow(full_2_communities)))
 
 # save as csv - input for disease model
-write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.names=FALSE)
+write.csv(full_2_communities, "data/2017_pop_demo_data_both_communities.csv", row.names=FALSE)
 
 
 
@@ -142,7 +157,7 @@ write.csv(data_complete_ag, "data/2017_pop_demo_data_agricultural.csv", row.name
 
 seed_zips <- c(389, 398, 952, 681)
 
-seed_site_df <- data_complete_ag %>% 
+seed_site_df <- full_2_communities %>% 
   filter(ZIP3 %in% seed_zips)
 
 seed_indices <- seed_site_df$ID
