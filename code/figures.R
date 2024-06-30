@@ -291,7 +291,7 @@ state_data_clean <- state_data_clean %>%
   mutate(Region_Community = interaction(Region, Community))
 
 peak_infect_bar_2 <- state_data_clean %>%
-  ggplot(aes(x = reorder(State_Abbreviation, -peak_infected), y = peak_infected, fill = Region_Community, group = Community)) +
+  ggplot(aes(x = reorder(State_Abbreviation, -difference), y = peak_infected, fill = Region_Community, group = Community)) +
   geom_col(position = position_dodge(width = 0.9)) +
   scale_fill_manual(values = custom_colors) +
   geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
