@@ -2,9 +2,11 @@
 
 # load packages
 library(tidyverse)
-library(wesanderson)
+# library(wesanderson)
 library(viridis)
-library(stringer)
+# library(stringer)
+library(RColorBrewer)
+
 
 # set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -45,16 +47,18 @@ get_recent_file <- function(base_filename){
 ###################################
 
 # read in data (alternatively, get from disease model output directly)
-# infection_data <- read.csv("data/infection_start_data.csv")  # infection start timepoints
 infection_data <- get_recent_file("infection_start_data")  # infection start timepoints
-# output_state_info_df <- read.csv("data/model_output_state_demographics.csv")  # also works where calls for fig_data or data_2017
 output_state_info_df <- get_recent_file("model_output_state_demographics")  # also works where calls for fig_data or data_2017
-# state_data_raw <- read_csv("data/model_output_grouped_by_state.csv") # state level data
 state_data_raw <- get_recent_file("model_output_grouped_by_state") # state level data
 demo_data <- read_csv("data/2017_pop_demo_data_both_communities.csv")
 # ag_demographic_data <- read_csv("data/migrants_merger.csv")  # demographic data for agricultural workforce
 # gen_demographic_data<- read_csv("data/general_population_demographics.csv")  # demographic data for general population
 hours_lost_data <- read_csv("data/state_lost_dollars.csv")
+
+# read in files before changed naming conventions to add dates
+# infection_data <- read.csv("data/infection_start_data.csv")  # infection start timepoints
+# output_state_info_df <- read.csv("data/model_output_state_demographics.csv")  # also works where calls for fig_data or data_2017
+# state_data_raw <- read_csv("data/model_output_grouped_by_state.csv") # state level data
 
 
 # MAP STATES TO REGIONS -------------------------------------
@@ -90,6 +94,10 @@ state_data_clean <- state_data_raw %>%
   group_by(Region, State, State_Abbreviation, Disease_Status, Community) %>%
   summarize(peak_infected = max(n_state))
 
+# calculate difference in peak infectious by community for each state
+state_diffs <- state_data_clean %>% group_by(State) %>% summarize(min=min(peak_infected), max=max(peak_infected), difference=max-min)
+
+state_data_clean <- full_join(state_data_clean, state_diffs, by="State")
 
 # PLOTTING -------------------------------------
 
@@ -116,7 +124,6 @@ map <- ggplot() +
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))  # Set plot margins to ensure white background around the plot
 map
 
-paste0("figures/infection_map_", format(Sys.Date(), "%m.%d.%y"), ".png")
 ggsave(paste0("figures/infection_map_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
        plot=map, width=8, height=5)
 
@@ -236,9 +243,9 @@ ggsave("figures/ag_workers_map.png", plot=map_ag_workers, width=6, height=4)
 gen_peak_infected <- median(filter(state_data_clean, Community == "c")$peak_infected)
 
 # make palette for plot
-pal <- wes_palette("IsleofDogs1")
-pal2 <- wes_palette("AsteroidCity2")
-pal3 <- wes_palette("Darjeeling1")
+# pal <- wes_palette("IsleofDogs1")
+# pal2 <- wes_palette("AsteroidCity2")
+# pal3 <- wes_palette("Darjeeling1")
 
 peak_infect_bar <- state_data_clean %>%
   filter(Community == "a") %>%
@@ -258,7 +265,49 @@ peak_infect_bar <- state_data_clean %>%
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
-ggsave("figures/peak_infection_state_bar_06.23.34.png", peak_infect_bar, width=14, height=7)
+ggsave(paste0("figures/peak_infection_state_bar_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=peak_infect_bar, width=14, height=7)
+# ggsave("figures/peak_infection_state_bar_06.23.34.png", peak_infect_bar, width=14, height=7)
+
+
+# make another plot of peak infection with bars for both community types
+
+# extract the colors from the Dark2 palette and generate lighter shades
+dark2_colors <- brewer.pal(6, "Dark2")
+lighter_colors <- sapply(dark2_colors, function(color) adjustcolor(color, alpha.f = 0.5))
+
+# extract unique regions from the dataset
+unique_regions <- unique(state_data_clean$Region)
+
+# combine original and lighter colors into a named vector
+custom_colors <- c(dark2_colors[1:length(unique_regions)], lighter_colors[1:length(unique_regions)])
+names(custom_colors) <- c(
+  paste0(unique_regions, ".a"),
+  paste0(unique_regions, ".c")
+)
+
+# create a combined variable for Region and Community
+state_data_clean <- state_data_clean %>%
+  mutate(Region_Community = interaction(Region, Community))
+
+peak_infect_bar_2 <- state_data_clean %>%
+  ggplot(aes(x = reorder(State_Abbreviation, -peak_infected), y = peak_infected, fill = Region_Community, group = Community)) +
+  geom_col(position = position_dodge(width = 0.9)) +
+  scale_fill_manual(values = custom_colors) +
+  geom_hline(yintercept = gen_peak_infected, linetype = 2, linewidth = 2, col = "black") +
+  labs(x = "State", y = "Peak Proportion Infected") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 13),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 16)) +
+  guides(fill = guide_legend(nrow = 2))
+
+ggsave(paste0("figures/peak_infection_state_bar_2_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=peak_infect_bar_2, width=14, height=7)
+
 
 
 # SIR PLOT BY STATE (INFECTIOUS ONLY), COLORED BY REGION -------------------------------------
@@ -291,7 +340,9 @@ SIR_I_state <- state_data_raw %>%
         legend.title = element_text(size = 20),
         legend.text = element_text(size = 15))
 
-ggsave("figures/infectious_by_state_06.23.24.png", SIR_I_state, width=10, height=5)
+# ggsave("figures/infectious_by_state_06.23.24.png", SIR_I_state, width=10, height=5)
+ggsave(paste0("figures/infectious_by_state_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=SIR_I_state, width=10, height=5)
 
 
 # MONEY LOST BY STATE ----------------------------
@@ -338,7 +389,9 @@ prop_lost_income <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbrev
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
-ggsave("figures/prop_lost_income_state_06.23.24.png", prop_lost_income, width=14, height=7)
+# ggsave("figures/prop_lost_income_state_06.23.24.png", prop_lost_income, width=14, height=7)
+ggsave(paste0("figures/prop_lost_income_state_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=prop_lost_income, width=14, height=7)
 
 # plot lost dollars
 lost_dollars <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -lost_dollars), y = lost_dollars, fill = Region)) +
@@ -356,7 +409,9 @@ lost_dollars <- ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviati
         legend.title = element_text(size = 18),
         legend.text = element_text(size = 16))
 
-ggsave("figures/lost_dollars_state.png", lost_dollars, width=14, height=7)
+# ggsave("figures/lost_dollars_state.png", lost_dollars, width=14, height=7)
+ggsave(paste0("figures/lost_dollars_state_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=lost_dollars, width=14, height=7)
 
 # plot total dollars
 ggplot(data = hours_lost_clean, aes(x = reorder(State_Abbreviation, -total_dollars), y = total_dollars, fill = Region)) +
@@ -396,7 +451,9 @@ map_dollars_log <- ggplot() +
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
   labs(fill="Log of lost agricultural income (USD)", title="Lost Agricultural Income by State")
 
-ggsave("figures/dollars_map_log.png", plot=map_dollars_log, width=8, height=4)
+# ggsave("figures/dollars_map_log.png", plot=map_dollars_log, width=8, height=4)
+ggsave(paste0("figures/dollars_map_log_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=map_dollars_log, width=8, height=4)
 
 map_dollars <- ggplot() + 
   geom_polygon(data = full_map_dollars_df,
@@ -411,7 +468,9 @@ map_dollars <- ggplot() +
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")) +
   labs(fill="Lost Agricultural Income (USD)", title="Lost Agricultural Income by State")
 
-ggsave("figures/dollars_map.png", plot=map_dollars, width=8, height=4)
+# ggsave("figures/dollars_map.png", plot=map_dollars, width=8, height=4)
+ggsave(paste0("figures/dollars_map_", format(Sys.Date(), "%m.%d.%y"), ".png"), 
+       plot=map_dollars, width=8, height=4)
 
 
 
