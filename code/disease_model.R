@@ -37,11 +37,10 @@ sir <- odin::odin({
     # if a location is still not infected, set value equal to previous time step
 
   # SUSCEPTIBLE:
-  # update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - beta_c*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - beta_c*Sc[i]*Ic[i] else Sc[i]
-    update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] else Sc[i]
+  update(Sc[]) <- if (infected[i] > 0 && Ic[i] == 0) Sc[i] - (beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) else if (Ic[i] > 0) Sc[i] - (beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] else Sc[i]
 
   # INFECTED:
-  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Ic[i] + (beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
+  update(Ic[]) <- if (infected[i] > 0 && Ic[i] == 0) Ic[i] + (beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*(Ic[i]+seed) - gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Ic[i] + (beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Sc[i]*Ic[i] - gamma*Ic[i] else Ic[i]
   
   # RECOVERED:
   update(Rc[]) <- if (infected[i] > 0 && Ic[i] == 0) Rc[i] + gamma*(Ic[i]+seed) else if (Ic[i] > 0 ) Rc[i] + gamma*Ic[i] else Rc[i]
@@ -55,10 +54,10 @@ sir <- odin::odin({
         # use the calculated value as the new value
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- if (Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + (((beta_a+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_a+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
@@ -129,8 +128,8 @@ sir <- odin::odin({
   epsilon <- user()
   n_locations <- user()
   ro <- user()
-  beta_c <- user()
-  beta_a <- user()
+  # beta_c <- user()
+  beta_base <- user()
   gamma <- user()
   xi <- user()
   eta <- user()
@@ -194,6 +193,7 @@ sir <- odin::odin({
 
 # DEFINE PARAMETERS
 
+# parameters for spatial model
 beta_not <- 0.0004*(1/3.5)  # adjusted for half weeks --> days
 beta_d <- 0.77*(1/3.5)  # adjusted for half weeks --> days
 beta_ds <- 0
@@ -202,9 +202,11 @@ mu <- 0.23  # likely don't have to adjust for days/half weeks
 nu <- 0
 epsilon <- 1  # Stephen recommended sticking to 1 for now
 ro <- 96
-beta_c <- 0.2  # based on data in papers linked here: 
+
+
+# beta_c <- 0.2  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
-beta_a <- 0.1 
+beta_base <- 0.1 
 gamma <- 0.125  # based on data in papers linked here: 
                     # https://docs.google.com/document/d/1MY5DfR6cU0gQ5wiKfxd1QaooSJZ4Io38A0uYwDPRO3U/edit
                     # ~8 days until recovery
@@ -263,8 +265,8 @@ model <- sir$new(beta_not=beta_not,
                  epsilon=epsilon,
                  n_locations=n_locations,
                  ro=ro,
-                 beta_c=beta_c,
-                 beta_a=beta_a,
+                 # beta_c=beta_c,
+                 beta_base=beta_base,
                  gamma=gamma,
                  xi=xi,
                  eta=eta,
