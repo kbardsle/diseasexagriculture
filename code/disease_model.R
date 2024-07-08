@@ -54,10 +54,10 @@ sir <- odin::odin({
         # use the calculated value as the new value
   
   # SUSCEPTIBLE:
-  update(Sa[]) <- if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i]
+  update(Sa[]) <- if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i] < 0) 0 else if (Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i] > 1) 1 else Sa[i] - (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i]
   
   # INFECTED:
-  update(Ia[]) <- if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
+  update(Ia[]) <- if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] < 0) 0 else if (Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i] > 1) 1 else Ia[i] + (((beta_base+xi*proportion_crowded_c[i]+eta*proportion_w_kids_c[i])*resistance*Ic[i]*(1-assortment_prob))+((beta_base+xi*proportion_crowded_a[i]+eta*proportion_w_kids_a[i])*resistance*Ia[i]*assortment_prob))*Sa[i] - gamma*Ia[i]
   
   # RECOVERED:
   update(Ra[]) <- if (Ra[i] + gamma*Ia[i] < 0) 0 else if (Ra[i] + gamma*Ia[i] > 1) 1 else Ra[i] + gamma*Ia[i]
@@ -135,6 +135,7 @@ sir <- odin::odin({
   eta <- user()
   seed <- user()
   assortment_prob <- user(0.5)
+  resistance <- user(1)
   
   # agricultural workforce community parameters
   proportion_w_kids_a[] <- user()
